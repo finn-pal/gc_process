@@ -15,13 +15,14 @@ __all__ = ["run_gc_model"]
 
 
 def prep_gc_model(sim: str, it: int, location: str):
-    sim_codes = "data/external/simulation_codes.json"
-    resultspath = "data/results/" + sim + "/raw/" + "it_%d/" % it
-
     if location == "local":
+        sim_codes = "data/external/simulation_codes.json"
+        resultpath = "data/results/" + sim + "/raw/" + "it_%d/" % it
         sim_path = "data/simulations/" + sim + "/interface_output/"
 
     elif location == "katana":
+        sim_codes = "/srv/scratch/astro/z5114326/gc_kinematics/data/external/simulation_codes.json"
+        resultpath = "/srv/scratch/astro/z5114326/gc_kinematics/data/results/" + sim + "/raw/" + "it_%d/" % it
         sim_path = "/srv/scratch/astro/z5114326/simulations/" + sim + "/interface_output/"
 
     else:
@@ -37,9 +38,15 @@ def prep_gc_model(sim: str, it: int, location: str):
     Ob = data[sim]["Ob"]
     Om = data[sim]["Om"]
 
-    redshift_snap = np.loadtxt("data/external/fire_z_list.txt", dtype=float)[offset:]
+    if location == "local":
+        redshift_snap = np.loadtxt("data/external/fire_z_list.txt", dtype=float)[offset:]
 
-    params["resultspath"] = resultspath
+    elif location == "katana":
+        redshift_snap = np.loadtxt(
+            "/srv/scratch/astro/z5114326/gc_kinematics/data/external/fire_z_list.txt", dtype=float
+        )[offset:]
+
+    params["resultspath"] = resultpath
     params["seed"] = int(it)
     params["subs"] = subs
     params["redshift_snap"] = redshift_snap
@@ -51,8 +58,8 @@ def prep_gc_model(sim: str, it: int, location: str):
     params["base_tree"] = sim_path
     params["base_halo"] = sim_path
 
-    if not os.path.exists(resultspath):
-        os.makedirs(resultspath)
+    if not os.path.exists(resultpath):
+        os.makedirs(resultpath)
 
     return params
 
