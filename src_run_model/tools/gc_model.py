@@ -21,8 +21,8 @@ def prep_gc_model(sim: str, it: int, location: str):
         sim_path = "data/simulations/" + sim + "/interface_output/"
 
     elif location == "katana":
-        sim_codes = "/srv/scratch/astro/z5114326/gc_kinematics/data/external/simulation_codes.json"
-        resultpath = "/srv/scratch/astro/z5114326/gc_kinematics/data/results/" + sim + "/raw/" + "it_%d/" % it
+        sim_codes = "/srv/scratch/astro/z5114326/gc_process/data/external/simulation_codes.json"
+        resultpath = "/srv/scratch/astro/z5114326/gc_process/data/results/" + sim + "/raw/" + "it_%d/" % it
         sim_path = "/srv/scratch/astro/z5114326/simulations/" + sim + "/interface_output/"
 
     else:
@@ -43,7 +43,7 @@ def prep_gc_model(sim: str, it: int, location: str):
 
     elif location == "katana":
         redshift_snap = np.loadtxt(
-            "/srv/scratch/astro/z5114326/gc_kinematics/data/external/fire_z_list.txt", dtype=float
+            "/srv/scratch/astro/z5114326/gc_process/data/external/fire_z_list.txt", dtype=float
         )[offset:]
 
     params["resultspath"] = resultpath
