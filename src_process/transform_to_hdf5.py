@@ -9,8 +9,8 @@ from tools.utils import iteration_name
 
 def main(simulation: str, iteration_low_limit: int, iteration_up_limit: int, location: str):
     if location == "local":
-        sim_dir = "/Users/z5114326/Desktop/fire/"
-        data_dir = "/Users/z5114326/Documents/GitHub/GC_kinematics_katana/data/"
+        sim_dir = "/Users/z5114326/Documents/simulations/"
+        data_dir = "/Users/z5114326/Documents/GitHub/gc_process_katana/data/"
 
     elif location == "katana":
         data_dir = "/srv/scratch/astro/z5114326/gc_process/data/"

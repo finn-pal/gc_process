@@ -18,12 +18,12 @@ def prep_gc_model(sim: str, it: int, location: str):
     if location == "local":
         sim_codes = "data/external/simulation_codes.json"
         resultpath = "data/results/" + sim + "/raw/" + "it_%d/" % it
-        sim_path = "data/simulations/" + sim + "/interface_output/"
+        sim_dir = "/Users/z5114326/Documents/simulations/" + sim + "/interface_output/"
 
     elif location == "katana":
         sim_codes = "/srv/scratch/astro/z5114326/gc_process/data/external/simulation_codes.json"
         resultpath = "/srv/scratch/astro/z5114326/gc_process/data/results/" + sim + "/raw/" + "it_%d/" % it
-        sim_path = "/srv/scratch/astro/z5114326/simulations/" + sim + "/interface_output/"
+        sim_dir = "/srv/scratch/astro/z5114326/simulations/" + sim + "/interface_output/"
 
     else:
         print("Incorrect location provided. Must be local or katana.")
@@ -55,8 +55,8 @@ def prep_gc_model(sim: str, it: int, location: str):
     params["h100"] = h100
     params["Ob"] = Ob
     params["Om"] = Om
-    params["base_tree"] = sim_path
-    params["base_halo"] = sim_path
+    params["base_tree"] = sim_dir
+    params["base_halo"] = sim_dir
 
     if not os.path.exists(resultpath):
         os.makedirs(resultpath)
