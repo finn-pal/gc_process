@@ -29,8 +29,8 @@ def convert_data(sim: str, it: int, offset: int, sim_dir: str, data_dir: str):
 
         # output files from the gc model
         main_fil = "allcat_s-%d_p2-7_p3-1.txt" % it
-        disrupt_fil = "allcat_s-%d_p2-7_p3-1_k-1.5_logm_snap596.txt" % it
-        t_disrupt_fil = "allcat_s-%d_p2-7_p3-1_k-1.5_t_disrupt_snap596.txt" % it
+        disrupt_fil = "allcat_s-%d_p2-7_p3-1_k-1.5_logm_snap%d.txt" % (it, 600 - offset)
+        t_disrupt_fil = "allcat_s-%d_p2-7_p3-1_k-1.5_t_disrupt_snap%d.txt" % (it, 600 - offset)
         gc_id_fil = "allcat_s-%d_p2-7_p3-1_gcid.txt" % it
         # simulation snapshot times
         snapshot_fil = "/snapshot_times.txt"

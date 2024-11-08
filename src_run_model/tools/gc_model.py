@@ -17,46 +17,49 @@ __all__ = ["run_gc_model"]
 def prep_gc_model(sim: str, it: int, location: str):
     if location == "local":
         sim_codes = "data/external/simulation_codes.json"
+        model_snaps = "data/external/model_snapshots.json"
         resultpath = "data/results/" + sim + "/raw/" + "it_%d/" % it
-        sim_dir = "/Users/z5114326/Documents/simulations/" + sim + "/interface_output/"
+        sim_dir = "/Users/z5114326/Documents/simulations/" + sim + "/"
 
     elif location == "katana":
         sim_codes = "/srv/scratch/astro/z5114326/gc_process/data/external/simulation_codes.json"
+        model_snaps = "/srv/scratch/astro/z5114326/gc_process/data/external/model_snapshots.json"
         resultpath = "/srv/scratch/astro/z5114326/gc_process/data/results/" + sim + "/raw/" + "it_%d/" % it
-        sim_dir = "/srv/scratch/astro/z5114326/simulations/" + sim + "/interface_output/"
+        sim_dir = "/srv/scratch/astro/z5114326/simulations/" + sim + "/"
 
     else:
         print("Incorrect location provided. Must be local or katana.")
         sys.exit()
 
-    with open(sim_codes) as json_file:
-        data = json.load(json_file)
+    redshift_path = sim_dir + sim + "_res7100/snapshot_times.txt"
+    interface_dir = sim_dir + "interface_output/"
 
-    subs = [data[sim]["halo"]]
-    offset = data[sim]["offset"]
-    h100 = data[sim]["h100"]
-    Ob = data[sim]["Ob"]
-    Om = data[sim]["Om"]
+    with open(sim_codes) as sim_json:
+        sim_data = json.load(sim_json)
 
-    if location == "local":
-        redshift_snap = np.loadtxt("data/external/fire_z_list.txt", dtype=float)[offset:]
+    subs = [sim_data[sim]["halo"]]
+    snap_offset = sim_data[sim]["offset"]
+    h100 = sim_data[sim]["h100"]
+    Ob = sim_data[sim]["Ob"]
+    Om = sim_data[sim]["Om"]
 
-    elif location == "katana":
-        redshift_snap = np.loadtxt(
-            "/srv/scratch/astro/z5114326/gc_process/data/external/fire_z_list.txt", dtype=float
-        )[offset:]
+    with open(model_snaps) as snap_json:
+        snap_data = json.load(snap_json)
+
+    redshift_snap = np.loadtxt(redshift_path, dtype=float)[:, 2][snap_offset:]
 
     params["resultspath"] = resultpath
     params["seed"] = int(it)
     params["subs"] = subs
     params["redshift_snap"] = redshift_snap
-    params["full_snap"] = params["full_snap"] - offset
+    params["full_snap"] = np.array(snap_data["public_snapshots"], dtype=int) - snap_offset
+    params["snap_evolve"] = np.array(snap_data["analyse_snaps"], dtype=int) - snap_offset
     params["analyse_snap"] = params["full_snap"][-1]
     params["h100"] = h100
     params["Ob"] = Ob
     params["Om"] = Om
-    params["base_tree"] = sim_dir
-    params["base_halo"] = sim_dir
+    params["base_tree"] = interface_dir
+    params["base_halo"] = interface_dir
 
     if not os.path.exists(resultpath):
         os.makedirs(resultpath)
@@ -89,7 +92,9 @@ def run_gc_model(params):
     offset(run_params)
     assign(run_params)
     get_tid(run_params)
-    evolve(run_params, return_t_disrupt=True)
+
+    for snap in params["snap_evolve"]:
+        evolve(run_params, return_t_disrupt=True, at_snap=snap)
 
     if params["verbose"]:
         print("\nModel was run on %d halo(s).\n" % len(params["subs"]))

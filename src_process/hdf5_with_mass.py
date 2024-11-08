@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import sys
 
 import h5py
 import numpy as np
@@ -11,10 +12,16 @@ def main(simulation: str, iteration_low_limit: int, iteration_up_limit: int, loc
     if location == "local":
         sim_dir = "/Users/z5114326/Documents/simulations/"
         data_dir = "/Users/z5114326/Documents/GitHub/gc_process_katana/data/"
+        sim_codes = "data/external/simulation_codes.json"
 
     elif location == "katana":
         data_dir = "/srv/scratch/astro/z5114326/gc_process/data/"
         sim_dir = "/srv/scratch/astro/z5114326/simulations/"
+        sim_codes = data_dir + "external/simulation_codes.json"
+
+    else:
+        print("Incorrect location provided. Must be local or katana.")
+        sys.exit()
 
     save_file = sim_dir + simulation + "/" + simulation + "_processed.hdf5"  # save location
 
@@ -22,11 +29,11 @@ def main(simulation: str, iteration_low_limit: int, iteration_up_limit: int, loc
         h5py.File(save_file, "w")
 
     with h5py.File(save_file, "a") as hdf:
-        for i in range(iteration_low_limit, iteration_up_limit + 1):
-            it_id = iteration_name(i)
+        for it in range(iteration_low_limit, iteration_up_limit + 1):
+            it_id = iteration_name(it)
             data_file = data_dir + "results/" + simulation + "/interim/" + it_id + ".json"
-            with open(data_file, "r") as json_file:
-                int_data = json.load(json_file)
+            with open(data_file, "r") as sim_json:
+                int_data = json.load(sim_json)
             data_dict = int_data[it_id]["source"]
 
             if it_id in hdf.keys():
@@ -44,6 +51,12 @@ def main(simulation: str, iteration_low_limit: int, iteration_up_limit: int, loc
                     source.create_dataset(key, data=data_dict[key])
                 else:
                     source.create_dataset(key, data=np.array(data_dict[key]))
+
+    # start adding masses at all available snapshots
+    with open(sim_codes) as sim_json:
+        sim_data = json.load(sim_json)
+
+    snap_offset = sim_data[simulation]["offset"]
 
 
 if __name__ == "__main__":
