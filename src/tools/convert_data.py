@@ -4,7 +4,7 @@ import os
 import numpy as np
 import pandas as pd
 from astropy.io import ascii
-from tools.utils import iteration_name
+from gc_utils import iteration_name  # type: ignore
 from tqdm import tqdm
 
 

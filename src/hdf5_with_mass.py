@@ -5,19 +5,23 @@ import sys
 
 import h5py
 import numpy as np
-from tools.utils import iteration_name
+from gc_utils import iteration_name  # type: ignore
+
+from tools.get_mass_at_snap import get_gc_masses_at_snap
 
 
 def main(simulation: str, iteration_low_limit: int, iteration_up_limit: int, location: str):
     if location == "local":
         sim_dir = "/Users/z5114326/Documents/simulations/"
         data_dir = "/Users/z5114326/Documents/GitHub/gc_process_katana/data/"
-        sim_codes = "data/external/simulation_codes.json"
+        sim_codes = data_dir + "external/simulation_codes.json"
+        model_snaps = data_dir + "external/model_snapshots.json"
 
     elif location == "katana":
         data_dir = "/srv/scratch/astro/z5114326/gc_process/data/"
         sim_dir = "/srv/scratch/astro/z5114326/simulations/"
         sim_codes = data_dir + "external/simulation_codes.json"
+        model_snaps = data_dir + "external/model_snapshots.json"
 
     else:
         print("Incorrect location provided. Must be local or katana.")
@@ -52,11 +56,22 @@ def main(simulation: str, iteration_low_limit: int, iteration_up_limit: int, loc
                 else:
                     source.create_dataset(key, data=np.array(data_dict[key]))
 
+    hdf.close()
+
     # start adding masses at all available snapshots
     with open(sim_codes) as sim_json:
         sim_data = json.load(sim_json)
 
+    with open(model_snaps) as snap_json:
+        snap_data = json.load(snap_json)
+
     snap_offset = sim_data[simulation]["offset"]
+    snap_lst = snap_data["analyse_snapshots"]
+
+    it_rng = iteration_up_limit - iteration_low_limit
+    it_lst = np.linspace(iteration_low_limit, iteration_up_limit, it_rng + 1, dtype=int)
+
+    get_gc_masses_at_snap(simulation, snap_offset, it_lst, snap_lst, sim_dir, data_dir)
 
 
 if __name__ == "__main__":

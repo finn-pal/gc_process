@@ -2,9 +2,10 @@ import argparse
 import json
 import sys
 
+from gc_utils import get_halo_tree  # type: ignore
+
 from tools.convert_data import convert_data
 from tools.process_data import process_data
-from tools.utils import get_halo_tree
 
 
 def main(simulation: str, iteration: int, location: str, real_flag=1, survive_flag=None, accretion_flag=None):

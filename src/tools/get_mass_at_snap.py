@@ -1,9 +1,7 @@
-import json
-
 import h5py
 import numpy as np
 import pandas as pd
-from utils import iteration_name, snapshot_name
+from gc_utils import iteration_name, snapshot_name  # type: ignore
 
 
 def get_gc_masses_at_snap(
@@ -55,7 +53,7 @@ def get_gc_masses_at_snap(
                 snap_accr_snap.append(snap_ac)
 
             if len(gc_id_snap) is None:
-                print("yikes")
+                continue
 
             snap_mass_file = raw_dir + "allcat_s-%d_p2-7_p3-1_k-1.5_logm_snap%d.txt" % (it, snapshot - offset)
             gc_id_file = raw_dir + "allcat_s-%d_p2-7_p3-1_gcid.txt" % it
@@ -104,18 +102,3 @@ def get_gc_masses_at_snap(
                     snap_group.create_dataset(key, data=data_dict[key])
                 else:
                     snap_group.create_dataset(key, data=np.array(data_dict[key]))
-
-
-sim = "m12i"
-offset = 4
-it_lst = [1]
-
-model_snaps = "data/external/model_snapshots.json"
-with open(model_snaps) as snap_json:
-    snap_data = json.load(snap_json)
-
-snap_lst = snap_data["analyse_snaps"]
-sim_dir = "/Users/z5114326/Documents/simulations/"
-data_dir = "/Users/z5114326/Documents/GitHub/gc_process_katana/data/"
-
-get_gc_masses_at_snap(sim, offset, it_lst, snap_lst, sim_dir, data_dir)

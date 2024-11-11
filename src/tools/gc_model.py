@@ -9,6 +9,7 @@ from GC_formation_model.evolve import evolve
 from GC_formation_model.form import form
 from GC_formation_model.get_tid import get_tid
 from GC_formation_model.offset import offset
+
 from tools.params import params
 
 __all__ = ["run_gc_model"]
@@ -53,7 +54,7 @@ def prep_gc_model(sim: str, it: int, location: str):
     params["subs"] = subs
     params["redshift_snap"] = redshift_snap
     params["full_snap"] = np.array(snap_data["public_snapshots"], dtype=int) - snap_offset
-    params["snap_evolve"] = np.array(snap_data["analyse_snaps"], dtype=int) - snap_offset
+    params["snap_evolve"] = np.array(snap_data["analyse_snapshots"], dtype=int) - snap_offset
     params["analyse_snap"] = params["full_snap"][-1]
     params["h100"] = h100
     params["Ob"] = Ob

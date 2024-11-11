@@ -2,7 +2,7 @@ import json
 
 import numpy as np
 from astropy.io import ascii
-from tools.utils import (
+from gc_utils import (  # type: ignore
     block_print,
     enable_print,
     get_descendants_halt,
