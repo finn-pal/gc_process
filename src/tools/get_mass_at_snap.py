@@ -5,6 +5,10 @@ import numpy as np
 import pandas as pd
 from gc_utils import iteration_name, particle_type, snapshot_name  # type: ignore
 
+# lets try this with multiprocessing, combine into a single dictionary and then write another function that
+# chucks the dictionary into hdf, this might be a really simple thing to do that will increase processing time
+# hugely. I might be able to the implement the same tactic for the kinematics stuff.
+
 
 def get_gc_masses_at_snap(
     simulation: str,
