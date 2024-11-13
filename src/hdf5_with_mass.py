@@ -117,7 +117,7 @@ if __name__ == "__main__":
         snap_data = json.load(snap_json)
 
     snap_offset = sim_data[sim]["offset"]
-    snap_lst = snap_data["analyse_snapshots"]
+    snap_lst = snap_data["public_snapshots"]
 
     cores = args.cores
     if cores is None:
