@@ -1,7 +1,9 @@
+import sys
+
 import h5py
 import numpy as np
 import pandas as pd
-from gc_utils import iteration_name, snapshot_name  # type: ignore
+from gc_utils import iteration_name, particle_type, snapshot_name  # type: ignore
 
 
 def get_gc_masses_at_snap(
@@ -19,41 +21,13 @@ def get_gc_masses_at_snap(
         raw_dir = data_dir + "results/" + simulation + "/raw/it_%d/" % it
         it_id = iteration_name(it)
 
-        gc_id = proc_data[it_id]["source"]["gc_id"]
-        analyse_flag = proc_data[it_id]["source"]["analyse_flag"]
-        group_id = proc_data[it_id]["source"]["group_id"]
-
-        snap_zform = proc_data[it_id]["source"]["snap_zform"]
-        snap_last = proc_data[it_id]["source"]["last_snap"]
-        snap_accr = proc_data[it_id]["source"]["snap_acc"]
-
-        ptypes_byte = proc_data[it_id]["source"]["ptype"]
-        ptypes = [ptype.decode("utf-8") for ptype in ptypes_byte]
-
-        # need to make a function to state if the gc is alive at the snapshot in question
-        gc_id_snap = []
-        group_id_snap = []
-        ptype_snap = []
-        snap_accr_snap = []
+        gc_id_lst = proc_data[it_id]["source"]["gc_id"]
+        analyse_flag_lst = proc_data[it_id]["source"]["analyse_flag"]
+        group_id_lst = proc_data[it_id]["source"]["group_id"]
+        snap_acc_lst = proc_data[it_id]["source"]["snap_acc"]
 
         for snapshot in snapshot_list:
             snap_id = snapshot_name(snapshot)
-            for gc, group, ptype, a_flag, snap_form, snap_disr, snap_ac in zip(
-                gc_id, group_id, ptypes, analyse_flag, snap_zform, snap_last, snap_accr
-            ):
-                if a_flag == 0:
-                    continue
-
-                if (snapshot < snap_form) or (snap_disr < snapshot):
-                    continue
-
-                gc_id_snap.append(gc)
-                group_id_snap.append(group)
-                ptype_snap.append(ptype)
-                snap_accr_snap.append(snap_ac)
-
-            if len(gc_id_snap) is None:
-                continue
 
             snap_mass_file = raw_dir + "allcat_s-%d_p2-7_p3-1_k-1.5_logm_snap%d.txt" % (it, snapshot - offset)
             gc_id_file = raw_dir + "allcat_s-%d_p2-7_p3-1_gcid.txt" % it
@@ -67,19 +41,42 @@ def get_gc_masses_at_snap(
             comb_df = pd.concat([gcid_df, mass_snap_df], axis=1)
             filt_comb_df = comb_df[comb_df["mass"] != -1]
 
-            indexes = filt_comb_df[filt_comb_df["GC_ID"].isin(gc_id_snap)].index
+            gc_id_snap = [gc_id for gc_id in filt_comb_df["GC_ID"]]
+            mass_snap = [mass for mass in filt_comb_df["mass"]]
+            ptype_snap = [particle_type(quality) for quality in filt_comb_df["quality"]]
+            idx_lst = filt_comb_df.index
 
-            mass_at_snap_lst = []
-            for idx in indexes:
-                mass_snap = comb_df["mass"][idx]
-                mass_at_snap_lst.append(mass_snap)
+            snap_accr_snap = []
+            group_id_snap = []
+            gc_test_set = []
+            analyse_flag_snap = []
+
+            for idx in idx_lst:
+                analyse_flag = analyse_flag_lst[idx]
+                snap_accr = snap_acc_lst[idx]
+                group_id = group_id_lst[idx]
+                gc = gc_id_lst[idx]
+
+                analyse_flag_snap.append(analyse_flag)
+                snap_accr_snap.append(snap_accr)
+                group_id_snap.append(group_id)
+                gc_test_set.append(gc)
+
+            for gc in gc_id_snap:
+                if gc not in gc_test_set:
+                    sys.exit("GC Number mismatch")
+
+            for gc in gc_test_set:
+                if gc not in gc_id_snap:
+                    sys.exit("GC Number mismatch")
 
             data_dict = {
                 "gc_id": gc_id_snap,
                 "ptype": ptype_snap,
                 "group_id": group_id_snap,
                 "accr_snap": snap_accr_snap,
-                "mass": mass_at_snap_lst,
+                "mass": mass_snap,
+                "analyse_flag": analyse_flag_snap,
             }
 
             # now add masses at each snapshot to file.

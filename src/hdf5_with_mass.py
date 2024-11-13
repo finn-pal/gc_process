@@ -66,7 +66,7 @@ def main(simulation: str, iteration_low_limit: int, iteration_up_limit: int, loc
         snap_data = json.load(snap_json)
 
     snap_offset = sim_data[simulation]["offset"]
-    snap_lst = snap_data["analyse_snapshots"]
+    snap_lst = snap_data["public_snapshots"]
 
     it_rng = iteration_up_limit - iteration_low_limit
     it_lst = np.linspace(iteration_low_limit, iteration_up_limit, it_rng + 1, dtype=int)

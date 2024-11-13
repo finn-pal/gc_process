@@ -54,7 +54,7 @@ def prep_gc_model(sim: str, it: int, location: str):
     params["subs"] = subs
     params["redshift_snap"] = redshift_snap
     params["full_snap"] = np.array(snap_data["public_snapshots"], dtype=int) - snap_offset
-    params["snap_evolve"] = np.array(snap_data["analyse_snapshots"], dtype=int) - snap_offset
+    params["snap_evolve"] = np.array(snap_data["public_snapshots"], dtype=int) - snap_offset
     params["analyse_snap"] = params["full_snap"][-1]
     params["h100"] = h100
     params["Ob"] = Ob

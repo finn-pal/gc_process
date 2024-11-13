@@ -1,0 +1,1 @@
+For hdf5_mass_at_snap for 100 iterations on katana at core = 1, ncpu = 10, ram = 8GB it takes _ min to run on Katana

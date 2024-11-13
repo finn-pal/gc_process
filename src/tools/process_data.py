@@ -9,28 +9,9 @@ from gc_utils import (  # type: ignore
     get_halo_cid,
     iteration_name,
     main_prog_halt,
+    particle_type,
 )
 from tqdm import tqdm
-
-
-def particle_type(quality: int) -> str:
-    """
-    Using the data quality flag from gc model return particle type. From the gc model:
-    # 2: good (star with t_s > t_form - time_lag):
-    # 1: half (star with t_s < t_form - time_lag)
-    # 0: bad (dm particle)
-
-    Args:
-        quality (int): Quality flag output from gc formation model (assign function).
-
-    Returns:
-        str: Particle type. Either "star" or "dark".
-    """
-    if quality == 0:
-        part = "dark"
-    else:
-        part = "star"
-    return part
 
 
 def get_accretion(halt, sim: str, halo_tid: int, tid_main_lst: list, sim_dir: str, t_dis: float = -1) -> dict:

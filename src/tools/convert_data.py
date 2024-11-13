@@ -134,7 +134,15 @@ def convert_data(sim: str, it: int, offset: int, sim_dir: str, data_dir: str):
         # get last snap where alive
         dis_idx = np.searchsorted(np.array(snap_all["time[Gyr]"]), int_df["t_dis"])
         dis_idx = [len(dis_idx) if idx == len(dis_idx) else idx for idx in dis_idx]
-        int_df["last_snap"] = [snap_all["i"][idx - 1] for idx in dis_idx]
+        last_snap_check = [snap_all["i"][idx - 1] for idx in dis_idx]
+        # int_df["last_snap"] = [snap_all["i"][idx - 1] for idx in dis_idx]
+
+        # this is an added line to make sure that gc's surviving at snap 600 are not grouped with those that
+        # die at snap 600.
+        last_snap_corr = [
+            last_snap if t_dis != -1 else -1 for last_snap, t_dis in zip(last_snap_check, int_df["t_dis"])
+        ]
+        int_df["last_snap"] = last_snap_corr
 
         # set a "real flag" which excludes gc's that have been disrupted but do not have a time of discruption
         # the candidates for this are usually repeated gc particle ids in adjacent public snapshots

@@ -17,3 +17,7 @@ z5114326@kdm.restech.unsw.edu.au:/srv/scratch/astro/z5114326/gc_process/
 /srv/scratch/astro/z5114326/gc_process/data
 
 /Users/z5114326/Documents/GitHub/gc_process_katana/data/external
+
+/srv/scratch/astro/z5114326
+
+z5114326@kdm.restech.unsw.edu.au:/srv/scratch/astro/z5114326/gc_simulation_utilities
