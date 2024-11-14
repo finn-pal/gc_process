@@ -63,13 +63,13 @@ def add_mass_hdf5(simulation, it_lst: list[int], result_dict: dict, sim_dir: str
                 snapshot = snap_groups[snap_id]
             else:
                 snapshot = snap_groups.create_group(snap_id)
-                for key in result_dict[it_id][snap_id].keys():
-                    if key in snapshot.keys():
-                        del snapshot[key]
-                    if key == "ptype":
-                        snapshot.create_dataset(key, data=result_dict[it_id][snap_id][key])
-                    else:
-                        snapshot.create_dataset(key, data=np.array(result_dict[it_id][snap_id][key]))
+            for key in result_dict[it_id][snap_id].keys():
+                if key in snapshot.keys():
+                    del snapshot[key]
+                if key == "ptype":
+                    snapshot.create_dataset(key, data=result_dict[it_id][snap_id][key])
+                else:
+                    snapshot.create_dataset(key, data=np.array(result_dict[it_id][snap_id][key]))
 
     proc_data.close()
 
