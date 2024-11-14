@@ -55,7 +55,6 @@ def get_gc_masses_at_snap(
         filt_comb_df = comb_df[
             (comb_df["mass"] != -1) & (comb_df["snap_form"] <= snapshot) & (comb_df["analyse_flag"] == 1)
         ]
-        print(len(filt_comb_df))
 
         gc_id_snap = [gc_id for gc_id in filt_comb_df["GC_ID"]]
         mass_snap = [mass for mass in filt_comb_df["mass"]]

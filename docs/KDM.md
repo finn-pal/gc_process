@@ -24,4 +24,4 @@ z5114326@kdm.restech.unsw.edu.au:/srv/scratch/astro/z5114326/gc_simulation_utili
 
 /srv/scratch/astro/z5114326/simulations/m12i/m12i_processed.hdf5
 
-/Users/z5114326/Documents/simulations/m12i
+/Users/z5114326/Documents/GitHub/gc_process_katana/src
