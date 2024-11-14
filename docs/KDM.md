@@ -21,3 +21,7 @@ z5114326@kdm.restech.unsw.edu.au:/srv/scratch/astro/z5114326/gc_process/
 /srv/scratch/astro/z5114326
 
 z5114326@kdm.restech.unsw.edu.au:/srv/scratch/astro/z5114326/gc_simulation_utilities
+
+/srv/scratch/astro/z5114326/simulations/m12i/m12i_processed.hdf5
+
+/Users/z5114326/Documents/simulations/m12i
