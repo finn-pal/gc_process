@@ -146,10 +146,9 @@ def group_accretion(
     group_id_lst = []
 
     for pre_acc_tid, accr_flag, an_flag in zip(pre_accretion_halo_tid, accretion_flag, analyse_flag):
-        # Ignore this for now as I want to include all data (inc an_flag == 0) for group accretion.
-        # if an_flag == 0:
-        #     group_id_lst.append(-2)
-        #     continue
+        if an_flag == 0:
+            group_id_lst.append(-2)
+            continue
 
         if accr_flag == 0:
             group_id_lst.append(0)
@@ -274,8 +273,7 @@ def process_data(
         # is analysis flag = 0 then set to np.nan and skip
         # if an_flag == 0:
 
-        # set this to an unrealistic number as I still want to include an_flag == 0 at this point in time.
-        if an_flag == 2:
+        if an_flag == 0:
             accretion_dict = accretion_dict_skip
 
         else:

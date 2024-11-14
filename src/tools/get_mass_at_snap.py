@@ -31,7 +31,9 @@ def get_gc_masses_at_snap(
     gc_id_lst = proc_data[it_id]["source"]["gc_id"]
     analyse_flag_lst = proc_data[it_id]["source"]["analyse_flag"]
     group_id_lst = proc_data[it_id]["source"]["group_id"]
+
     snap_acc_lst = proc_data[it_id]["source"]["snap_acc"]
+    snap_form_lst = proc_data[it_id]["source"]["snap_zform"]
 
     snap_dict = {}
     for snapshot in snapshot_list:
@@ -47,7 +49,13 @@ def get_gc_masses_at_snap(
         mass_snap_df.columns = ["mass"]
 
         comb_df = pd.concat([gcid_df, mass_snap_df], axis=1)
-        filt_comb_df = comb_df[comb_df["mass"] != -1]
+        comb_df["snap_form"] = snap_form_lst
+        comb_df["analyse_flag"] = analyse_flag_lst  # have included this for now
+
+        filt_comb_df = comb_df[
+            (comb_df["mass"] != -1) & (comb_df["snap_form"] <= snapshot) & (comb_df["analyse_flag"] == 1)
+        ]
+        print(len(filt_comb_df))
 
         gc_id_snap = [gc_id for gc_id in filt_comb_df["GC_ID"]]
         mass_snap = [mass for mass in filt_comb_df["mass"]]
@@ -84,7 +92,7 @@ def get_gc_masses_at_snap(
             "group_id": group_id_snap,
             "acc_snap": snap_acc_snap,
             "mass": mass_snap,
-            "analyse_flag": analyse_flag_snap,
+            # "analyse_flag": analyse_flag_snap,
         }
 
         snap_dict[snap_id] = key_dict
