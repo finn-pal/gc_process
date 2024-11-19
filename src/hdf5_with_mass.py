@@ -92,8 +92,8 @@ if __name__ == "__main__":
     location = args.location
 
     if location == "local":
-        sim_dir = "/Users/z5114326/Documents/simulations/"
-        data_dir = "/Users/z5114326/Documents/GitHub/gc_process_katana/data/"
+        sim_dir = "../../simulations/"
+        data_dir = "data/"
         sim_codes = data_dir + "external/simulation_codes.json"
         model_snaps = data_dir + "external/model_snapshots.json"
 

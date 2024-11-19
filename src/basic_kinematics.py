@@ -20,6 +20,7 @@ def main(
 
     part = open_snapshot(snapshot, fire_dir)
     get_basic_kinematics(part, simulation, it_lst, snapshot, sim_dir, shared_dict)
+    del part
 
 
 def add_kinematics_hdf5(simulation, it_lst: list[int], snap_lst: list[int], result_dict: dict, sim_dir: str):
@@ -77,8 +78,8 @@ if __name__ == "__main__":
     location = args.location
 
     if location == "local":
-        sim_dir = "/Users/z5114326/Documents/simulations/"
-        data_dir = "/Users/z5114326/Documents/GitHub/gc_process_katana/data/"
+        sim_dir = "../../simulations/"
+        data_dir = "data/"
         model_snaps = data_dir + "external/model_snapshots.json"
 
     elif location == "katana":

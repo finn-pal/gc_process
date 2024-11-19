@@ -1,3 +1,5 @@
+import time
+
 import h5py
 import numpy as np
 import utilities as ut
@@ -19,7 +21,9 @@ def get_basic_kinematics(
     proc_data = h5py.File(proc_file, "r")  # open processed data file
 
     it_dict = {}
+    start = time.time()
     for it in it_lst:
+        print(it)
         it_id = iteration_name(it)
 
         gc_id_snap = proc_data[it_id]["snapshots"][snap_id]["gc_id"]
@@ -123,6 +127,10 @@ def get_basic_kinematics(
         }
 
         it_dict[it_id] = kin_dict
+        del kin_dict
+
+    end = time.time()
+    print("time:", end - start)
     data_dict[snap_id] = it_dict
 
     return data_dict

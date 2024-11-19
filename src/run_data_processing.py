@@ -10,9 +10,9 @@ from tools.process_data import process_data
 
 def main(simulation: str, iteration: int, location: str, real_flag=1, survive_flag=None, accretion_flag=None):
     if location == "local":
-        sim_dir = "/Users/z5114326/Documents/simulations/"
-        data_dir = "/Users/z5114326/Documents/GitHub/gc_process_katana/data/"
-        sim_codes = "data/external/simulation_codes.json"
+        sim_dir = "../../simulations/"
+        data_dir = "data/"
+        sim_codes = data_dir + "external/simulation_codes.json"
 
     elif location == "katana":
         data_dir = "/srv/scratch/astro/z5114326/gc_process/data/"

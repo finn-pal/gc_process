@@ -20,7 +20,7 @@ def prep_gc_model(sim: str, it: int, location: str):
         sim_codes = "data/external/simulation_codes.json"
         model_snaps = "data/external/model_snapshots.json"
         resultpath = "data/results/" + sim + "/raw/" + "it_%d/" % it
-        sim_dir = "/Users/z5114326/Documents/simulations/" + sim + "/"
+        sim_dir = "../../simulations/" + sim + "/"
 
     elif location == "katana":
         sim_codes = "/srv/scratch/astro/z5114326/gc_process/data/external/simulation_codes.json"
