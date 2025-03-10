@@ -150,11 +150,11 @@ def group_accretion(
             group_id_lst.append(-2)
             continue
 
-        if accr_flag == 0:
+        if accr_flag == 0:  # formed in-situ
             group_id_lst.append(0)
             continue
 
-        if pre_acc_tid == -1:  # not accreted
+        if pre_acc_tid == -1:  # gc destroyed before accretion
             group_id_lst.append(-1)
             continue
 

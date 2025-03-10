@@ -26,8 +26,8 @@ def main(simulation: str, iteration: int, location: str, real_flag=1, survive_fl
     with open(sim_codes) as json_file:
         data = json.load(json_file)
 
-    with open(sim_codes) as json_file:
-        data = json.load(json_file)
+    # with open(sim_codes) as json_file:
+    #     data = json.load(json_file)
 
     offset = data[simulation]["offset"]
     main_halo_tid = [data[simulation]["halo"]]
