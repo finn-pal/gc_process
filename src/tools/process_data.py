@@ -43,6 +43,7 @@ def get_accretion(halt, sim: str, halo_tid: int, tid_main_lst: list, sim_dir: st
     snapshot_times = "/snapshot_times.txt"
 
     # if gc is not accreted then list acc_flag as 0 and other all values as -1
+    # I don't think there are any instances of this (by structure of the GC model)
     if halo_tid in tid_main_lst:
         t_acc = -1
         halo_acc_tid = -1
@@ -85,6 +86,7 @@ def get_accretion(halt, sim: str, halo_tid: int, tid_main_lst: list, sim_dir: st
             acc_survive = 1  # survived
 
         # if gc disrupted at the time of accretion then get all details of accretion
+        # I don't believe there are any instances of this
         elif t_dis == t_acc:
             idx_pre_acc = idx_acc - 1
 
@@ -97,14 +99,29 @@ def get_accretion(halt, sim: str, halo_tid: int, tid_main_lst: list, sim_dir: st
 
         # if gc disrupted before halo is accreted then set all values to -1
         else:
+            ### UPDATE (11/03/2025) commented out lines below is old
+            idx_pre_acc = idx_acc - 1
+            # might later combine with the above (t_dis <= t_acc)
+
+            # t_acc = -1
+            # halo_acc_tid = -1
+            # halo_acc_cid = -1
+            # snap_acc = -1
+            # halo_pre_acc_tid = -1
+            # halo_pre_acc_cid = -1
+            # snap_pre_acc = -1
+
             t_acc = -1
-            halo_acc_tid = -1
-            halo_acc_cid = -1
-            snap_acc = -1
-            halo_pre_acc_tid = -1
-            halo_pre_acc_cid = -1
-            snap_pre_acc = -1
-            acc_survive = -1
+
+            # these values hold no meaning as not accreted, but are required to get group_id
+            halo_acc_tid = halt["tid"][desc_lst[idx_acc]]
+            halo_acc_cid, snap_acc = get_halo_cid(halt, halo_acc_tid, fire_dir)
+            halo_pre_acc_tid = halt["tid"][desc_lst[idx_pre_acc]]
+            halo_pre_acc_cid, snap_pre_acc = get_halo_cid(halt, halo_pre_acc_tid, fire_dir)
+
+            ### UPDATE (11/03/2025) commented out line below is old
+            # acc_survive = -1
+            acc_survive = 0
 
     # need the int conversions to make json output work
     halo_acc_tid = np.array(halo_acc_tid, dtype=int).tolist()
@@ -129,7 +146,10 @@ def get_accretion(halt, sim: str, halo_tid: int, tid_main_lst: list, sim_dir: st
 
 
 def group_accretion(
-    accretion_flag: list[int], pre_accretion_halo_tid: list[int], analyse_flag: list[int]
+    accretion_flag: list[int],
+    pre_accretion_halo_tid: list[int],
+    analyse_flag: list[int],
+    survived_past_accretion: list[int],
 ) -> list:
     """
     Group accretion's together for easy identification. Group 0 is in-situ formation, -1 is gc's disrupted
@@ -145,7 +165,9 @@ def group_accretion(
     """
     group_id_lst = []
 
-    for pre_acc_tid, accr_flag, an_flag in zip(pre_accretion_halo_tid, accretion_flag, analyse_flag):
+    for pre_acc_tid, accr_flag, an_flag, surv_flag in zip(
+        pre_accretion_halo_tid, accretion_flag, analyse_flag, survived_past_accretion
+    ):
         if an_flag == 0:
             group_id_lst.append(-2)
             continue
@@ -154,8 +176,10 @@ def group_accretion(
             group_id_lst.append(0)
             continue
 
-        if pre_acc_tid == -1:  # gc destroyed before accretion
-            group_id_lst.append(-1)
+        if surv_flag == 0:  # gc destroyed before / during accretion
+            ### UPDATE (11/03/2025) commented out line below is old
+            # group_id_lst.append(-1)
+            group_id_lst.append(-pre_acc_tid)  # add a (-) to ensure detactable as died before
             continue
 
         else:
@@ -296,7 +320,7 @@ def process_data(
         ptype_lst.append(ptype)
 
     # add accretion group
-    group_id_lst = group_accretion(accr_flag_lst, halo_pre_acc_tid_lst, analyse_flag)
+    group_id_lst = group_accretion(accr_flag_lst, halo_pre_acc_tid_lst, analyse_flag, acc_survive_lst)
     # int_data.close()
 
     it_dict = {

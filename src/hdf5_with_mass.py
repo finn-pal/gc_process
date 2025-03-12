@@ -41,7 +41,7 @@ def create_hdf5(simulation: str, it_lst: list[int], sim_dir: str, data_dir: str)
                 else:
                     source.create_dataset(key, data=np.array(data_dict[key]))
 
-    hdf.close()
+    # hdf.close()
 
 
 def add_mass_hdf5(simulation, it_lst: list[int], result_dict: dict, sim_dir: str):

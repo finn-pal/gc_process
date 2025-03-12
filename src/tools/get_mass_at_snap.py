@@ -65,6 +65,7 @@ def get_gc_masses_at_snap(
         gc_test_set = []
         analyse_flag_snap = []
         now_accreted_flag = []
+        survived_accretion = []
 
         for idx in idx_lst:
             analyse_flag = analyse_flag_lst[idx]
@@ -73,6 +74,7 @@ def get_gc_masses_at_snap(
             gc = gc_id_lst[idx]
 
             ######## TEST ADD ALREADY ACCRETED FLAG ########
+            ### UPDATE (11/03/2025)
             # I found that in each of these snapshots I have included GCs that have formed
             # but have not yet been accreted. So I need to add a flag showing its been accreted
 
@@ -85,11 +87,26 @@ def get_gc_masses_at_snap(
 
             ###############################################
 
+            ### UPDATE (11/03/2025)
+            # add survived accretion flag (if group_id is (-) it did not survive
+
+            # don't need to worry about -2 for analyse flag as only include real GCs
+            if group_id == 0:
+                # is in-situ (not accreted)
+                survive_accreted = -1
+            if group_id < 0:
+                # did not survive to be accreted
+                survive_accreted = 0
+            else:
+                # survived to accretion
+                survive_accreted = 1
+
             analyse_flag_snap.append(analyse_flag)
             snap_acc_snap.append(snap_accr)
             group_id_snap.append(group_id)
             gc_test_set.append(gc)
             now_accreted_flag.append(now_accreted)
+            survived_accretion.append(survive_accreted)
 
         for gc in gc_id_snap:
             if gc not in gc_test_set:
@@ -106,6 +123,7 @@ def get_gc_masses_at_snap(
             "acc_snap": snap_acc_snap,
             "mass": mass_snap,
             "now_accreted": now_accreted_flag,
+            "survived_accretion": survived_accretion,
             # "analyse_flag": analyse_flag_snap,
         }
 
