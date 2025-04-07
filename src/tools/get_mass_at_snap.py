@@ -10,22 +10,21 @@ from gc_utils import iteration_name, particle_type, snapshot_name  # type: ignor
 
 
 def get_gc_masses_at_snap(
-    simulation: str,
+    sim: str,
     offset: int,
     it: int,
     snapshot_list: list[int],
     sim_dir: str,
-    data_dir: str,
     data_dict: dict,
 ):
-    proc_file = sim_dir + simulation + "/" + simulation + "_processed.hdf5"
+    proc_file = sim_dir + sim + "/" + sim + "_processed.hdf5"
     proc_data = h5py.File(proc_file, "r")  # open processed data file
 
     it_id = iteration_name(it)
 
     # data_dict[it_id] = {}
 
-    raw_dir = data_dir + "results/" + simulation + "/raw/it_%d/" % it
+    raw_dir = sim_dir + sim + "/gc_results/raw/it_%d/" % it
 
     gc_id_lst = proc_data[it_id]["source"]["gc_id"]
     analyse_flag_lst = proc_data[it_id]["source"]["analyse_flag"]

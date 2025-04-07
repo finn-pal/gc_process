@@ -8,7 +8,7 @@ from gc_utils import iteration_name  # type: ignore
 from tqdm import tqdm
 
 
-def convert_data(sim: str, it: int, offset: int, sim_dir: str, data_dir: str):
+def convert_data(sim: str, it: int, offset: int, sim_dir: str):
     """
     Filter raw data to only include important information and add extra data that enables ease of analysis
     / filtering later. Will print this data table to hdf5 format in the interim data directory.
@@ -18,14 +18,13 @@ def convert_data(sim: str, it: int, offset: int, sim_dir: str, data_dir: str):
         it (int): Iteration number. This realtes to the randomiser seed used in the gc model.
         offset (int): Offset used to convert from yt form into gizmo form (used in the interface).
         sim_dir (str): Directory of the simulation data.
-        data_dir (str): Directory where raw data is stored.
     """
     # ensure group naming is consitent with three digits
     it_id = iteration_name(it)
 
     for _ in tqdm(range(1), ncols=150, desc=it_id + " Converting Data...................."):
         # data directory
-        raw_dir = data_dir + "results/" + sim + "/raw/it_%d/" % it
+        raw_dir = sim_dir + sim + "/gc_results/raw/it_%d/" % it
 
         # output files from the gc model
         main_fil = "allcat_s-%d_p2-7_p3-1.txt" % it
@@ -120,7 +119,7 @@ def convert_data(sim: str, it: int, offset: int, sim_dir: str, data_dir: str):
         int_df["form_lbt"] = [snap_all["lookback-time[Gyr]"][idx] for idx in idx_lst]
 
         # open file of public snapshots into a table
-        public_snapshot_fil = data_dir + "external/snapshot_times_public.txt"
+        public_snapshot_fil = sim_dir + "snapshot_times_public.txt"
         with open(public_snapshot_fil) as f:
             content = f.readlines()
             content = content[13:]
@@ -155,7 +154,7 @@ def convert_data(sim: str, it: int, offset: int, sim_dir: str, data_dir: str):
     for key in int_df.keys():
         proc_dict[it_id]["source"][key] = int_df[key].tolist()
 
-    save_dir = data_dir + "results/" + sim + "/interim/"  # save location
+    save_dir = sim_dir + sim + "/gc_results/interim/"  # save location
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 

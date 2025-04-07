@@ -200,7 +200,6 @@ def process_data(
     sim: str,
     it: int,
     sim_dir: str,
-    data_dir: str,
     main_halo_tid: int,
     halt,
     real_flag=1,
@@ -231,7 +230,7 @@ def process_data(
     it_id = iteration_name(it)
 
     # data_file = sim_dir + sim + "/" + sim + "_processed.hdf5"
-    data_file = data_dir + "results/" + sim + "/interim/" + it_id + ".json"
+    data_file = sim_dir + sim + "/gc_results/interim/" + it_id + ".json"
 
     # int_data = h5py.File(data_file, "r")  # open interim data file
 

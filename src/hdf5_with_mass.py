@@ -11,8 +11,8 @@ from gc_utils import iteration_name  # type: ignore
 from tools.get_mass_at_snap import get_gc_masses_at_snap
 
 
-def create_hdf5(simulation: str, it_lst: list[int], sim_dir: str, data_dir: str):
-    save_file = sim_dir + simulation + "/" + simulation + "_processed.hdf5"  # save location
+def create_hdf5(sim: str, it_lst: list[int], sim_dir: str):
+    save_file = sim_dir + sim + "/" + sim + "_processed.hdf5"  # save location
 
     if not os.path.exists(save_file):
         h5py.File(save_file, "w")
@@ -20,7 +20,7 @@ def create_hdf5(simulation: str, it_lst: list[int], sim_dir: str, data_dir: str)
     with h5py.File(save_file, "a") as hdf:
         for it in it_lst:
             it_id = iteration_name(it)
-            data_file = data_dir + "results/" + simulation + "/interim/" + it_id + ".json"
+            data_file = sim_dir + sim + "/gc_results/interim/" + it_id + ".json"
             with open(data_file, "r") as sim_json:
                 int_data = json.load(sim_json)
             data_dict = int_data[it_id]["source"]
@@ -96,21 +96,24 @@ if __name__ == "__main__":
 
     if location == "local":
         sim_dir = "../../simulations/"
-        data_dir = "data/"
-        sim_codes = data_dir + "external/simulation_codes.json"
-        model_snaps = data_dir + "external/model_snapshots.json"
+        # data_dir = "data/"
+        # sim_codes = data_dir + "external/simulation_codes.json"
+        # model_snaps = data_dir + "external/model_snapshots.json"
 
     elif location == "katana":
-        data_dir = "/srv/scratch/astro/z5114326/gc_process/data/"
+        # data_dir = "/srv/scratch/astro/z5114326/gc_process/data/"
         sim_dir = "/srv/scratch/astro/z5114326/simulations/"
-        sim_codes = data_dir + "external/simulation_codes.json"
-        model_snaps = data_dir + "external/model_snapshots.json"
+        # sim_codes = data_dir + "external/simulation_codes.json"
+        # model_snaps = data_dir + "external/model_snapshots.json"
 
     else:
         print("Incorrect location provided. Must be local or katana.")
         sys.exit()
 
-    create_hdf5(sim, it_lst, sim_dir, data_dir)
+    sim_codes = sim_dir + "simulation_codes.json"
+    model_snaps = sim_dir + "model_snapshots.json"
+
+    create_hdf5(sim, it_lst, sim_dir)
 
     # start adding masses at all available snapshots
     with open(sim_codes) as sim_json:
@@ -124,11 +127,11 @@ if __name__ == "__main__":
 
     cores = args.cores
     if cores is None:
-        cores = mp.cpu_count()
+        cores = 8
 
     with mp.Manager() as manager:
         shared_dict = manager.dict()  # Shared dictionary across processes
-        args = [(sim, snap_offset, it, snap_lst, sim_dir, data_dir, shared_dict) for it in it_lst]
+        args = [(sim, snap_offset, it, snap_lst, sim_dir, shared_dict) for it in it_lst]
 
         with mp.Pool(processes=cores, maxtasksperchild=1) as pool:
             pool.starmap(get_gc_masses_at_snap, args, chunksize=1)

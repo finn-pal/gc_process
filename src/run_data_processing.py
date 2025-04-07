@@ -11,32 +11,31 @@ from tools.process_data import process_data
 def main(simulation: str, iteration: int, location: str, real_flag=1, survive_flag=None, accretion_flag=None):
     if location == "local":
         sim_dir = "../../simulations/"
-        data_dir = "data/"
-        sim_codes = data_dir + "external/simulation_codes.json"
+        # data_dir = "data/"
+        # sim_codes = data_dir + "external/simulation_codes.json"
 
     elif location == "katana":
-        data_dir = "/srv/scratch/astro/z5114326/gc_process/data/"
+        # data_dir = "/srv/scratch/astro/z5114326/gc_process/data/"
         sim_dir = "/srv/scratch/astro/z5114326/simulations/"
-        sim_codes = data_dir + "external/simulation_codes.json"
+        # sim_codes = data_dir + "external/simulation_codes.json"
 
     else:
         print("Incorrect location provided. Must be local or katana.")
         sys.exit()
 
+    sim_codes = sim_dir + "simulation_codes.json"
     with open(sim_codes) as json_file:
-        data = json.load(json_file)
+        sim_data = json.load(json_file)
 
     # with open(sim_codes) as json_file:
     #     data = json.load(json_file)
 
-    offset = data[simulation]["offset"]
-    main_halo_tid = [data[simulation]["halo"]]
+    offset = sim_data[simulation]["offset"]
+    main_halo_tid = [sim_data[simulation]["halo"]]
 
     halt = get_halo_tree(simulation, sim_dir)
-    convert_data(simulation, iteration, offset, sim_dir, data_dir)
-    process_data(
-        simulation, iteration, sim_dir, data_dir, main_halo_tid, halt, real_flag, survive_flag, accretion_flag
-    )
+    convert_data(simulation, iteration, offset, sim_dir)
+    process_data(simulation, iteration, sim_dir, main_halo_tid, halt, real_flag, survive_flag, accretion_flag)
 
 
 if __name__ == "__main__":

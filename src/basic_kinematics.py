@@ -2,24 +2,29 @@ import argparse
 import json
 import multiprocessing as mp
 
+import gc_utils  # type: ignore
 import h5py
 import numpy as np
-from gc_utils import iteration_name, open_snapshot, snapshot_name  # type: ignore
 
 from tools.get_basic_kinematics_at_snap import get_basic_kinematics
 
 
 def main(
-    simulation: str,
+    sim: str,
     it_lst: list[int],
     snapshot: int,
+    main_halo_tid: int,
     sim_dir: str,
+    add_exsitu_halo_details: bool = True,
     shared_dict: dict = {},
 ):
-    fire_dir = sim_dir + simulation + "/" + simulation + "_res7100/"
+    fire_dir = sim_dir + sim + "/" + sim + "_res7100/"
 
-    part = open_snapshot(snapshot, fire_dir)
-    get_basic_kinematics(part, simulation, it_lst, snapshot, sim_dir, shared_dict)
+    # only need dark and star as gc can't be gas particles
+    part = gc_utils.open_snapshot(snapshot, fire_dir, species=["dark", "star"], assign_hosts_rotation=True)
+    get_basic_kinematics(
+        part, sim, it_lst, snapshot, main_halo_tid, sim_dir, add_exsitu_halo_details, shared_dict
+    )
     del part
 
 
@@ -28,7 +33,7 @@ def add_kinematics_hdf5(simulation, it_lst: list[int], snap_lst: list[int], resu
     proc_data = h5py.File(proc_file, "a")  # open processed data file
 
     for it in it_lst:
-        it_id = iteration_name(it)
+        it_id = gc_utils.iteration_name(it)
         if it_id in proc_data.keys():
             it_grouping = proc_data[it_id]
         else:
@@ -38,7 +43,7 @@ def add_kinematics_hdf5(simulation, it_lst: list[int], snap_lst: list[int], resu
         else:
             snap_groups = it_grouping.create_group("snapshots")
         for snap in snap_lst:
-            snap_id = snapshot_name(snap)
+            snap_id = gc_utils.snapshot_name(snap)
             if snap_id in snap_groups.keys():
                 snapshot = snap_groups[snap_id]
             else:
@@ -46,8 +51,7 @@ def add_kinematics_hdf5(simulation, it_lst: list[int], snap_lst: list[int], resu
             for key in result_dict[snap_id][it_id].keys():
                 if key in snapshot.keys():
                     del snapshot[key]
-                else:
-                    snapshot.create_dataset(key, data=result_dict[snap_id][it_id][key])
+                snapshot.create_dataset(key, data=result_dict[snap_id][it_id][key])
 
     proc_data.close()
 
@@ -59,6 +63,7 @@ if __name__ == "__main__":
     parser.add_argument("-b", "--iteration_up_limit", required=True, type=int, help="upper bound iteration")
     parser.add_argument("-l", "--location", required=True, type=str, help="either local or katana")
     parser.add_argument("-c", "--cores", required=False, type=int, help="number of cores to run process on")
+    parser.add_argument("-e", "--exsitu", required=False, type=bool, help="add the exsitu gc halo details")
     parser.add_argument(
         "-n",
         "--snapshots",
@@ -79,16 +84,21 @@ if __name__ == "__main__":
 
     if location == "local":
         sim_dir = "../../simulations/"
-        data_dir = "data/"
-        model_snaps = data_dir + "external/model_snapshots.json"
+        # data_dir = "data/"
 
     elif location == "katana":
-        data_dir = "/srv/scratch/astro/z5114326/gc_process/data/"
+        # data_dir = "/srv/scratch/astro/z5114326/gc_process/data/"
         sim_dir = "/srv/scratch/astro/z5114326/simulations/"
-        model_snaps = data_dir + "external/model_snapshots.json"
 
+    model_snaps = sim_dir + "model_snapshots.json"
     with open(model_snaps) as snap_json:
         snap_data = json.load(snap_json)
+
+    sim_codes = sim_dir + "simulation_codes.json"
+    with open(sim_codes) as json_file:
+        sim_data = json.load(json_file)
+
+    main_halo_tid = [sim_data[sim]["halo"]]
 
     snap_lst = args.snapshots
     if snap_lst is None:
@@ -98,12 +108,21 @@ if __name__ == "__main__":
     cores = args.cores
     if cores is None:
         # 4 cores is max to run with 64 GB RAM
-        cores = mp.cpu_count()
+        # cores = mp.cpu_count()
+        cores = 8
+
+    # could default instead but have set it up like this
+    add_exsitu_halo_details = args.exsitu
+    if add_exsitu_halo_details is None:
+        add_exsitu_halo_details = True
 
     with mp.Manager() as manager:
         shared_dict = manager.dict()  # Shared dictionary across processes
         # args = [(sim, it_lst, snap_group, sim_dir, data_dir, shared_dict) for snap_group in snap_groups]
-        args = [(sim, it_lst, snap, sim_dir, shared_dict) for snap in snap_lst]
+        args = [
+            (sim, it_lst, snap, main_halo_tid, sim_dir, add_exsitu_halo_details, shared_dict)
+            for snap in snap_lst
+        ]
 
         with mp.Pool(processes=cores, maxtasksperchild=1) as pool:
             pool.starmap(main, args, chunksize=1)
