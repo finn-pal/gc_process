@@ -36,6 +36,9 @@ def create_hdf5(simulation: str, it_lst: list[int], sim_dir: str, data_dir: str)
             for key in data_dict.keys():
                 if key in source.keys():
                     del source[key]
+                    ### UPDATE (11/03/2025)
+                    # line below added
+                    source.create_dataset(key, data=data_dict[key])
                 if key == "ptype":
                     source.create_dataset(key, data=data_dict[key])
                 else:

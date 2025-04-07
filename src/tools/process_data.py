@@ -111,7 +111,12 @@ def get_accretion(halt, sim: str, halo_tid: int, tid_main_lst: list, sim_dir: st
             # halo_pre_acc_cid = -1
             # snap_pre_acc = -1
 
-            t_acc = -1
+            ### UPDATE (12/03/2025) commented out lines below is old
+            # t_acc = -1
+
+            # so I can still make ex-situ mass plots. This relates to when they would have been accreted
+            # if had survived.
+            t_acc = t_acc
 
             # these values hold no meaning as not accreted, but are required to get group_id
             halo_acc_tid = halt["tid"][desc_lst[idx_acc]]

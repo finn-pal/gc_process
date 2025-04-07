@@ -1,9 +1,9 @@
 import time
 
+import gc_utils  # type: ignore
 import h5py
 import numpy as np
 import utilities as ut
-from gc_utils import iteration_name, snapshot_name  # type: ignore
 
 
 def get_basic_kinematics(
@@ -15,7 +15,7 @@ def get_basic_kinematics(
     data_dict: dict = {},
     host_index: int = 0,
 ):
-    snap_id = snapshot_name(snapshot)
+    snap_id = gc_utils.snapshot_name(snapshot)
 
     proc_file = sim_dir + sim + "/" + sim + "_processed.hdf5"
     proc_data = h5py.File(proc_file, "r")  # open processed data file
@@ -24,7 +24,7 @@ def get_basic_kinematics(
     start = time.time()
     for it in it_lst:
         print(it)
-        it_id = iteration_name(it)
+        it_id = gc_utils.iteration_name(it)
 
         gc_id_snap = proc_data[it_id]["snapshots"][snap_id]["gc_id"]
 
@@ -128,6 +128,8 @@ def get_basic_kinematics(
 
         it_dict[it_id] = kin_dict
         del kin_dict
+
+    proc_data.close()
 
     end = time.time()
     print("time:", end - start)

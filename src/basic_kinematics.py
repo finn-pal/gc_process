@@ -92,7 +92,8 @@ if __name__ == "__main__":
 
     snap_lst = args.snapshots
     if snap_lst is None:
-        snap_lst = snap_data["analyse_snapshots"]
+        # snap_lst = snap_data["analyse_snapshots"]
+        snap_lst = snap_data["public_snapshots"]
 
     cores = args.cores
     if cores is None:
