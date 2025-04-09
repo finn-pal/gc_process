@@ -2,8 +2,9 @@ import argparse
 import json
 import sys
 
-from gc_utils import get_halo_tree  # type: ignore
+import gc_utils  # type: ignore
 
+# from gc_utils import get_halo_tree  # type: ignore
 from tools.convert_data import convert_data
 from tools.process_data import process_data
 
@@ -33,7 +34,7 @@ def main(simulation: str, iteration: int, location: str, real_flag=1, survive_fl
     offset = sim_data[simulation]["offset"]
     main_halo_tid = [sim_data[simulation]["halo"]]
 
-    halt = get_halo_tree(simulation, sim_dir)
+    halt = gc_utils.get_halo_tree(simulation, sim_dir)
     convert_data(simulation, iteration, offset, sim_dir)
     process_data(simulation, iteration, sim_dir, main_halo_tid, halt, real_flag, survive_flag, accretion_flag)
 

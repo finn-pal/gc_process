@@ -1,16 +1,8 @@
 import json
 
+import gc_utils  # type: ignore
 import numpy as np
 from astropy.io import ascii
-from gc_utils import (  # type: ignore
-    block_print,
-    enable_print,
-    get_descendants_halt,
-    get_halo_cid,
-    iteration_name,
-    main_prog_halt,
-    particle_type,
-)
 from tqdm import tqdm
 
 
@@ -63,7 +55,7 @@ def get_accretion(halt, sim: str, halo_tid: int, tid_main_lst: list, sim_dir: st
         snap_all = ascii.read(content)
 
         # get list of descendents (tid's) of the halo
-        desc_lst = get_descendants_halt(halo_tid, halt)
+        desc_lst = gc_utils.get_descendants_halt(halo_tid, halt)
 
         # find which descendent of the halo of formation has been accreted into the main galaxy
         idx_lst = np.array([1 if halt["tid"][idx] in tid_main_lst else 0 for idx in desc_lst])
@@ -80,9 +72,9 @@ def get_accretion(halt, sim: str, halo_tid: int, tid_main_lst: list, sim_dir: st
 
             t_acc = t_acc
             halo_acc_tid = halt["tid"][desc_lst[idx_acc]]
-            halo_acc_cid, snap_acc = get_halo_cid(halt, halo_acc_tid, fire_dir)
+            halo_acc_cid, snap_acc = gc_utils.get_halo_cid(halt, halo_acc_tid, fire_dir)
             halo_pre_acc_tid = halt["tid"][desc_lst[idx_pre_acc]]
-            halo_pre_acc_cid, snap_pre_acc = get_halo_cid(halt, halo_pre_acc_tid, fire_dir)
+            halo_pre_acc_cid, snap_pre_acc = gc_utils.get_halo_cid(halt, halo_pre_acc_tid, fire_dir)
             acc_survive = 1  # survived
 
         # if gc disrupted at the time of accretion then get all details of accretion
@@ -92,9 +84,9 @@ def get_accretion(halt, sim: str, halo_tid: int, tid_main_lst: list, sim_dir: st
 
             t_acc = t_acc
             halo_acc_tid = halt["tid"][desc_lst[idx_acc]]
-            halo_acc_cid, snap_acc = get_halo_cid(halt, halo_acc_tid, fire_dir)
+            halo_acc_cid, snap_acc = gc_utils.get_halo_cid(halt, halo_acc_tid, fire_dir)
             halo_pre_acc_tid = halt["tid"][desc_lst[idx_pre_acc]]
-            halo_pre_acc_cid, snap_pre_acc = get_halo_cid(halt, halo_pre_acc_tid, fire_dir)
+            halo_pre_acc_cid, snap_pre_acc = gc_utils.get_halo_cid(halt, halo_pre_acc_tid, fire_dir)
             acc_survive = 0  # did not survived
 
         # if gc disrupted before halo is accreted then set all values to -1
@@ -120,9 +112,9 @@ def get_accretion(halt, sim: str, halo_tid: int, tid_main_lst: list, sim_dir: st
 
             # these values hold no meaning as not accreted, but are required to get group_id
             halo_acc_tid = halt["tid"][desc_lst[idx_acc]]
-            halo_acc_cid, snap_acc = get_halo_cid(halt, halo_acc_tid, fire_dir)
+            halo_acc_cid, snap_acc = gc_utils.get_halo_cid(halt, halo_acc_tid, fire_dir)
             halo_pre_acc_tid = halt["tid"][desc_lst[idx_pre_acc]]
-            halo_pre_acc_cid, snap_pre_acc = get_halo_cid(halt, halo_pre_acc_tid, fire_dir)
+            halo_pre_acc_cid, snap_pre_acc = gc_utils.get_halo_cid(halt, halo_pre_acc_tid, fire_dir)
 
             ### UPDATE (11/03/2025) commented out line below is old
             # acc_survive = -1
@@ -224,10 +216,10 @@ def process_data(
     """
 
     # get list of main progenitors of most massive galaxy across all redshifts
-    tid_main_lst = main_prog_halt(halt, main_halo_tid)
+    tid_main_lst = gc_utils.main_prog_halt(halt, main_halo_tid)
 
     # get group from iteration (it)
-    it_id = iteration_name(it)
+    it_id = gc_utils.iteration_name(it)
 
     # data_file = sim_dir + sim + "/" + sim + "_processed.hdf5"
     data_file = sim_dir + sim + "/gc_results/interim/" + it_id + ".json"
@@ -305,9 +297,9 @@ def process_data(
             accretion_dict = accretion_dict_skip
 
         else:
-            block_print()
+            gc_utils.block_print()
             accretion_dict = get_accretion(halt, sim, h_form, tid_main_lst, sim_dir, t_d)
-            enable_print()
+            gc_utils.enable_print()
 
         t_acc_lst.append(accretion_dict["accretion_time"])
         halo_acc_tid_lst.append(accretion_dict["accretion_halo_tid"])
@@ -320,7 +312,7 @@ def process_data(
 
     ptype_lst = []
     for qual in int_data[it_id]["source"]["quality"]:
-        ptype = particle_type(qual)
+        ptype = gc_utils.particle_type(qual)
         ptype_lst.append(ptype)
 
     # add accretion group

@@ -5,6 +5,7 @@ import multiprocessing as mp
 import gc_utils  # type: ignore
 import h5py
 import numpy as np
+import pandas as pd
 
 from tools.get_basic_kinematics_at_snap import get_basic_kinematics
 
@@ -90,9 +91,21 @@ if __name__ == "__main__":
         # data_dir = "/srv/scratch/astro/z5114326/gc_process/data/"
         sim_dir = "/srv/scratch/astro/z5114326/simulations/"
 
-    model_snaps = sim_dir + "model_snapshots.json"
-    with open(model_snaps) as snap_json:
-        snap_data = json.load(snap_json)
+    # model_snaps = sim_dir + "model_snapshots.json"
+    # with open(model_snaps) as snap_json:
+    #     snap_data = json.load(snap_json)
+
+    public_snapshot_file = sim_dir + "snapshot_times_public.txt"
+    pub_data = pd.read_table(public_snapshot_file, comment="#", header=None, sep=r"\s+")
+    pub_data.columns = [
+        "index",
+        "scale_factor",
+        "redshift",
+        "time_Gyr",
+        "lookback_time_Gyr",
+        "time_width_Myr",
+    ]
+    pub_snaps = np.array(pub_data["index"], dtype=int)
 
     sim_codes = sim_dir + "simulation_codes.json"
     with open(sim_codes) as json_file:
@@ -103,7 +116,8 @@ if __name__ == "__main__":
     snap_lst = args.snapshots
     if snap_lst is None:
         # snap_lst = snap_data["analyse_snapshots"]
-        snap_lst = snap_data["public_snapshots"]
+        # snap_lst = snap_data["public_snapshots"]
+        snap_lst = pub_snaps
 
     cores = args.cores
     if cores is None:

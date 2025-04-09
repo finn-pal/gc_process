@@ -3,6 +3,7 @@ import os
 import sys
 
 import numpy as np
+import pandas as pd
 from GC_formation_model import astro_utils, logo
 from GC_formation_model.assign import assign
 from GC_formation_model.evolve import evolve
@@ -17,24 +18,27 @@ __all__ = ["run_gc_model"]
 
 def prep_gc_model(sim: str, it: int, location: str):
     if location == "local":
-        sim_codes = "data/external/simulation_codes.json"
-        model_snaps = "data/external/model_snapshots.json"
-        resultpath = "data/results/" + sim + "/raw/" + "it_%d/" % it
-        sim_dir = "../../simulations/" + sim + "/"
+        # sim_codes = "data/external/simulation_codes.json"
+        # model_snaps = "data/external/model_snapshots.json"
+        # resultpath = "data/results/" + sim + "/raw/" + "it_%d/" % it
+        sim_dir = "../../simulations/"
 
     elif location == "katana":
-        sim_codes = "/srv/scratch/astro/z5114326/gc_process/data/external/simulation_codes.json"
-        model_snaps = "/srv/scratch/astro/z5114326/gc_process/data/external/model_snapshots.json"
-        resultpath = "/srv/scratch/astro/z5114326/gc_process/data/results/" + sim + "/raw/" + "it_%d/" % it
-        sim_dir = "/srv/scratch/astro/z5114326/simulations/" + sim + "/"
+        # sim_codes = "/srv/scratch/astro/z5114326/gc_process/data/external/simulation_codes.json"
+        # model_snaps = "/srv/scratch/astro/z5114326/gc_process/data/external/model_snapshots.json"
+        # resultpath = "/srv/scratch/astro/z5114326/gc_process/data/results/" + sim + "/raw/" + "it_%d/" % it
+        sim_dir = "/srv/scratch/astro/z5114326/simulations/"
 
     else:
         print("Incorrect location provided. Must be local or katana.")
         sys.exit()
 
-    redshift_path = sim_dir + sim + "_res7100/snapshot_times.txt"
-    interface_dir = sim_dir + "interface_output/"
+    resultpath = sim_dir + sim + "/gc_results/raw/it_%d/" % it
 
+    redshift_path = sim_dir + sim + "/" + sim + "_res7100/snapshot_times.txt"
+    interface_dir = sim_dir + sim + "/interface_output/"
+
+    sim_codes = sim_dir + "simulation_codes.json"
     with open(sim_codes) as sim_json:
         sim_data = json.load(sim_json)
 
@@ -44,8 +48,20 @@ def prep_gc_model(sim: str, it: int, location: str):
     Ob = sim_data[sim]["Ob"]
     Om = sim_data[sim]["Om"]
 
-    with open(model_snaps) as snap_json:
-        snap_data = json.load(snap_json)
+    # with open(model_snaps) as snap_json:
+    #     snap_data = json.load(snap_json)
+
+    public_snapshot_file = sim_dir + "snapshot_times_public.txt"
+    pub_data = pd.read_table(public_snapshot_file, comment="#", header=None, sep=r"\s+")
+    pub_data.columns = [
+        "index",
+        "scale_factor",
+        "redshift",
+        "time_Gyr",
+        "lookback_time_Gyr",
+        "time_width_Myr",
+    ]
+    pub_snaps = np.array(pub_data["index"], dtype=int)
 
     redshift_snap = np.loadtxt(redshift_path, dtype=float)[:, 2][snap_offset:]
 
@@ -53,8 +69,8 @@ def prep_gc_model(sim: str, it: int, location: str):
     params["seed"] = int(it)
     params["subs"] = subs
     params["redshift_snap"] = redshift_snap
-    params["full_snap"] = np.array(snap_data["public_snapshots"], dtype=int) - snap_offset
-    params["snap_evolve"] = np.array(snap_data["public_snapshots"], dtype=int) - snap_offset
+    params["full_snap"] = pub_snaps - snap_offset
+    params["snap_evolve"] = pub_snaps - snap_offset
     params["analyse_snap"] = params["full_snap"][-1]
     params["h100"] = h100
     params["Ob"] = Ob

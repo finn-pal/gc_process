@@ -4,10 +4,12 @@ import multiprocessing as mp
 import os
 import sys
 
+import gc_utils  # type: ignore
 import h5py
 import numpy as np
-from gc_utils import iteration_name  # type: ignore
+import pandas as pd
 
+# from gc_utils import iteration_name  # type: ignore
 from tools.get_mass_at_snap import get_gc_masses_at_snap
 
 
@@ -19,7 +21,7 @@ def create_hdf5(sim: str, it_lst: list[int], sim_dir: str):
 
     with h5py.File(save_file, "a") as hdf:
         for it in it_lst:
-            it_id = iteration_name(it)
+            it_id = gc_utils.iteration_name(it)
             data_file = sim_dir + sim + "/gc_results/interim/" + it_id + ".json"
             with open(data_file, "r") as sim_json:
                 int_data = json.load(sim_json)
@@ -36,9 +38,6 @@ def create_hdf5(sim: str, it_lst: list[int], sim_dir: str):
             for key in data_dict.keys():
                 if key in source.keys():
                     del source[key]
-                    ### UPDATE (11/03/2025)
-                    # line below added
-                    source.create_dataset(key, data=data_dict[key])
                 if key == "ptype":
                     source.create_dataset(key, data=data_dict[key])
                 else:
@@ -52,7 +51,7 @@ def add_mass_hdf5(simulation, it_lst: list[int], result_dict: dict, sim_dir: str
     proc_data = h5py.File(proc_file, "a")  # open processed data file
 
     for it in it_lst:
-        it_id = iteration_name(it)
+        it_id = gc_utils.iteration_name(it)
         if it_id in proc_data.keys():
             it_grouping = proc_data[it_id]
         else:
@@ -119,11 +118,24 @@ if __name__ == "__main__":
     with open(sim_codes) as sim_json:
         sim_data = json.load(sim_json)
 
-    with open(model_snaps) as snap_json:
-        snap_data = json.load(snap_json)
+        # with open(model_snaps) as snap_json:
+        #     snap_data = json.load(snap_json)
+
+    public_snapshot_file = sim_dir + "snapshot_times_public.txt"
+    pub_data = pd.read_table(public_snapshot_file, comment="#", header=None, sep=r"\s+")
+    pub_data.columns = [
+        "index",
+        "scale_factor",
+        "redshift",
+        "time_Gyr",
+        "lookback_time_Gyr",
+        "time_width_Myr",
+    ]
+    pub_snaps = np.array(pub_data["index"], dtype=int)
 
     snap_offset = sim_data[sim]["offset"]
-    snap_lst = snap_data["public_snapshots"]
+    # snap_lst = snap_data["public_snapshots"]
+    snap_lst = pub_snaps
 
     cores = args.cores
     if cores is None:

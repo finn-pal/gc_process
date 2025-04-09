@@ -1,8 +1,12 @@
 import time
 
 import gc_utils  # type: ignore
+import gizmo_analysis as gizmo
 import h5py
 import numpy as np
+import utilities as ut
+
+from tools.params import params
 
 
 def get_snap_groups(it_lst: list[int], snapshot: int, proc_data):
@@ -55,6 +59,214 @@ def get_group_dict(part, halt, proc_data, it_lst, snapshot, main_halo_tid):
     return group_dict
 
 
+def get_correct_gc_part_idx(
+    part, halt, proc_data, it, gc_id, snapshot, main_halo_tid, sim, sim_dir, choose_random: bool = False
+):
+    # this is a temporary solution. I do not know what to do if two possible particles have the same
+    # formation snapshot
+
+    it_id = gc_utils.iteration_name(it)
+    ana_mask = proc_data[it_id]["source"]["analyse_flag"][()] == 1
+    gc_mask = proc_data[it_id]["source"]["gc_id"][()] == gc_id
+    gc_snapform = proc_data[it_id]["source"]["snap_zform"][ana_mask & gc_mask][0]
+
+    # do a check to ensure part matches intended snap
+    if part.snapshot["index"] != snapshot:
+        raise RuntimeError("Part selection does not match intended snapshot for halo details")
+
+    # first step is to see how many GCs match the expected formation snapshot
+    # if only one then that is the corresponding GC
+    part_idxs = np.where(part["star"]["id"] == gc_id)[0]
+    part_snapform = part["star"].prop("form.snapshot", part_idxs)
+    matching_snapform_mask = part_snapform == gc_snapform
+    part_idxs = part_idxs[matching_snapform_mask]
+
+    if len(part_idxs) == 0:
+        raise RuntimeError(
+            "No particles have same formation snapshot as GC, cannot determine correct GC particle"
+        )
+
+    if len(part_idxs) > 1:
+        # code this part up with imports
+        r_max = params["rmax_form"]  # kpc
+
+        # if more than one GC has the expected formation snapshot then we next inspect distances from the
+        # centre of their parent halo
+        group_id = np.abs(proc_data[it_id]["source"]["group_id"][ana_mask & gc_mask][0])
+
+        if group_id == 0:
+            halo_tid = main_halo_tid
+        else:
+            halo_tid = group_id
+
+        # get closest next public snapshot (previously calculated)
+        gc_snapform_pub = proc_data[it_id]["source"]["pubsnap_zform"][ana_mask & gc_mask][0]
+        halo_tid_snap = gc_utils.get_halo_prog_at_snap(halt, halo_tid, gc_snapform_pub)
+        halo_idx = np.where(halt["tid"] == halo_tid_snap)[0][0]
+
+        parent_snap_pub = halt["snapshot"][halo_idx]
+
+        # ensure parent halo matches required snapshot
+        if parent_snap_pub != gc_snapform_pub:
+            raise RuntimeError("Parent halo does not match intended snapshot")
+
+        parent_halo_pos = halt["position"][halo_idx]
+
+        if snapshot == gc_snapform_pub:
+            part_distances = ut.coordinate.get_distances(
+                part["star"]["position"][part_idxs],
+                parent_halo_pos,
+                part.info["box.length"],
+                part.snapshot["scalefactor"],
+                total_distance=True,
+            )  # [kpc physical]
+
+            distance_mask = part_distances < r_max
+            part_idxs = part_idxs[distance_mask]
+
+        else:
+            # only need to be concerned with star particles
+            gc_utils.block_print()
+            fire_dir = sim_dir + sim + "/" + sim + "_res7100/"
+
+            part_form_pub = gizmo.io.Read.read_snapshots(
+                "star", "index", gc_snapform_pub, fire_dir, assign_pointers=True
+            )
+
+            part_snap = gizmo.io.Read.read_snapshots(
+                "star", "index", snapshot, fire_dir, assign_pointers=True
+            )
+            gc_utils.enable_print()
+
+            # get part indices with matching gc_id
+            part_form_idxs = np.where(part_form_pub["star"]["id"] == gc_id)[0]
+
+            # get part indices with matching snapform
+            part_form_snapform = part_form_pub["star"].prop("form.snapshot", part_form_idxs)
+            matching_snapform_mask = part_form_snapform == gc_snapform
+            part_form_idxs = part_form_idxs[matching_snapform_mask]
+
+            part_distances = ut.coordinate.get_distances(
+                part_form_pub["star"]["position"][part_form_idxs],
+                parent_halo_pos,
+                part_form_pub.info["box.length"],
+                part_form_pub.snapshot["scalefactor"],
+                total_distance=True,
+            )  # [kpc physical]
+
+            distance_mask = part_distances < r_max
+            part_form_idxs = part_form_idxs[distance_mask]
+
+            # now need to map part_form_idxs onto part_idxs
+            part_form_pub.Pointer.add_intermediate_pointers(part_snap.Pointer)
+            pointers = part_form_pub.Pointer.get_pointers(
+                species_name_from="star", species_names_to="star", intermediate_snapshot=True, forward=True
+            )
+
+            indices_at_form = part_form_idxs
+            indices_at_snap = pointers[indices_at_form]
+
+            part_idxs = indices_at_snap
+
+    if choose_random:
+        # randomly choose one
+        part_idxs = np.random.choice(part_idxs, 1)
+
+    # else take youngest
+    else:
+        star_ages = part["star"].prop("age", part_idxs)
+        min_age = np.min(star_ages)
+
+        # Mask to find all indexes where age == min_age
+        min_age_mask = star_ages == min_age
+        part_idxs = part_idxs[min_age_mask]
+
+        # if still more than one then just randomly select
+        if len(part_idxs) > 1:
+            part_idxs = np.random.choice(part_idxs, 1)
+
+    if len(part_idxs) == 0:
+        raise RuntimeError(
+            "No particles have same formation snapshot as GC, cannot determine correct GC particle"
+        )
+
+    # correct_part_idx = part_idxs[matching_snapform][0]
+
+    # final check to confirm only one particle chosen
+    if len(part_idxs):
+        part_idxs = part_idxs[0]
+
+    else:
+        raise RuntimeError("Cannot determine correct GC particle")
+
+    if part["star"]["id"][part_idxs] != gc_id:
+        raise RuntimeError("Error in determining correct GC particle index")
+
+    return part_idxs
+
+
+def remove_duplicates_with_report(arr):
+    arr = np.array(arr)  # Convert the list to a numpy array
+    unique_elements, counts = np.unique(arr, return_counts=True)  # Get unique elements and their counts
+    duplicates = unique_elements[counts > 1]  # Duplicates are those that appear more than once
+    unique_list = unique_elements.tolist()  # Convert unique elements back to a list
+
+    return unique_list, duplicates.tolist()  # Return unique and duplicate lists
+
+
+def create_gc_part_idx_dict(part, halt, proc_data, it, snapshot, main_halo_tid, sim, sim_dir):
+    it_id = gc_utils.iteration_name(it)
+    snap_id = gc_utils.snapshot_name(snapshot)
+
+    gc_id_snap = proc_data[it_id]["snapshots"][snap_id]["gc_id"][()]
+
+    ptype_byte_snap = proc_data[it_id]["snapshots"][snap_id]["ptype"]
+    ptype_snap = [ptype.decode("utf-8") for ptype in ptype_byte_snap]
+
+    # Step 1: group GCs by particle type
+    gc_by_ptype = {}
+    gc_by_ptype["star"] = []
+    gc_by_ptype["dark"] = []
+
+    for gc, ptype in zip(gc_id_snap, ptype_snap):
+        gc_by_ptype[ptype].append(gc)
+
+    # Step 2: for each ptype, build a small dict: gc_id → index
+    id_idx_map = {}
+
+    for ptype, gc_ids in gc_by_ptype.items():
+        ids = part[ptype]["id"]  # potentially millions of entries
+        # gc_ids = np.array(gc_ids)  # small subset
+
+        # Check which of these are in the main list
+        mask = np.isin(ids, gc_ids)
+        idxs = np.nonzero(mask)[0]
+        found_ids = ids[idxs]
+
+        # Build small, efficient lookup: GC ID → array index
+        id_idx_map[ptype] = dict(zip(found_ids, idxs))
+
+        # concerned abour duplciate star ids
+        if ptype == "star":
+            _, duplicates_ids = remove_duplicates_with_report(found_ids)
+
+    # only concerned with duplciates in star
+    for gc_id in duplicates_ids:
+        # corrected_idx = get_correct_gc_part_idx(part, proc_data, it, gc_id, snapshot, sim, sim_dir)
+        corrected_idx = get_correct_gc_part_idx(
+            part, halt, proc_data, it, gc_id, snapshot, main_halo_tid, sim, sim_dir
+        )
+
+        id_idx_map["star"][gc_id] = corrected_idx
+
+    return id_idx_map, gc_id_snap, ptype_snap
+
+
+#####################################################################################################################
+# Need to add a thing that uses pointers for previous snapshots to get the right index in the current snapshot
+#####################################################################################################################
+
+
 def get_basic_kinematics(
     part,
     sim: str,
@@ -94,7 +306,10 @@ def get_basic_kinematics(
         it_id = gc_utils.iteration_name(it)
         print(snap_id, "-", it_id)
 
-        id_idx_map, gc_id_snap, ptype_snap = gc_utils.create_gc_part_idx_dict(part, proc_data, it, snapshot)
+        # id_idx_map, gc_id_snap, ptype_snap = gc_utils.create_gc_part_idx_dict(part, proc_data, it, snapshot)
+        id_idx_map, gc_id_snap, ptype_snap = create_gc_part_idx_dict(
+            part, halt, proc_data, it, snapshot, main_halo_tid, sim, sim_dir
+        )
 
         if len(gc_id_snap) is None:
             continue
