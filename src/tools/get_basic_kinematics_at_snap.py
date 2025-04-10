@@ -181,9 +181,10 @@ def get_correct_gc_part_idx(
         min_age_mask = star_ages == min_age
         part_idxs = part_idxs[min_age_mask]
 
-        # if still more than one then just randomly select
+        # if still more than one then just select idx zero
         if len(part_idxs) > 1:
-            part_idxs = np.random.choice(part_idxs, 1)
+            # part_idxs = np.random.choice(part_idxs, 1)
+            part_idxs = part_idxs[0]
 
     if len(part_idxs) == 0:
         raise RuntimeError(
@@ -252,7 +253,6 @@ def create_gc_part_idx_dict(part, halt, proc_data, it, snapshot, main_halo_tid, 
 
     # only concerned with duplciates in star
     for gc_id in duplicates_ids:
-        # corrected_idx = get_correct_gc_part_idx(part, proc_data, it, gc_id, snapshot, sim, sim_dir)
         corrected_idx = get_correct_gc_part_idx(
             part, halt, proc_data, it, gc_id, snapshot, main_halo_tid, sim, sim_dir
         )
@@ -306,10 +306,11 @@ def get_basic_kinematics(
         it_id = gc_utils.iteration_name(it)
         print(snap_id, "-", it_id)
 
-        # id_idx_map, gc_id_snap, ptype_snap = gc_utils.create_gc_part_idx_dict(part, proc_data, it, snapshot)
         id_idx_map, gc_id_snap, ptype_snap = create_gc_part_idx_dict(
             part, halt, proc_data, it, snapshot, main_halo_tid, sim, sim_dir
         )
+
+        group_ids = proc_data[it_id]["snapshots"][snap_id]["group_id"][()]
 
         if len(gc_id_snap) is None:
             continue
@@ -343,7 +344,10 @@ def get_basic_kinematics(
 
         l_xyz_lst = []
 
-        for gc, ptype in zip(gc_id_snap, ptype_snap):
+        # parent_halo_tid_lst = []
+        snap_part_idx_lst = []
+
+        for gc, ptype, group_id in zip(gc_id_snap, ptype_snap, group_ids):
             idx = id_idx_map[ptype][gc]
 
             # is the MW progenitor is the main host at this snapshot
@@ -407,6 +411,15 @@ def get_basic_kinematics(
 
             l_xyz_lst.append([lx, ly, lz])
 
+            # if group_id == 0:
+            #     group_halo = main_halo_tid
+            # else:
+            #     group_halo = np.abs(group_id)
+            # parent_tid = gc_utils.get_halo_prog_at_snap(halt, group_halo, snapshot)
+
+            # parent_halo_tid_lst.append(parent_tid)
+            snap_part_idx_lst.append(idx)
+
         kin_dict = {
             # "x": np.array(x_lst),
             # "y": np.array(y_lst),
@@ -418,6 +431,8 @@ def get_basic_kinematics(
             # "phi_cyl": np.array(phi_cyl_lst),
             # "vr_cyl": np.array(vr_cyl_lst),
             # "vphi_cyl": np.array(vphi_cyl_lst),
+            # "halo.tid": np.array(parent_halo_tid_lst),
+            "snap_part_idx": np.array(snap_part_idx_lst),
             "pos.xyz": np.array(pos_xyz_lst),
             "vel.xyz": np.array(vel_xyz_lst),
             "pos.cyl": np.array(pos_cyl_lst),
@@ -432,8 +447,6 @@ def get_basic_kinematics(
         }
 
         if add_exsitu_halo_details:
-            group_ids = proc_data[it_id]["snapshots"][snap_id]["group_id"][()]
-
             ex_pos_xyz_lst = []
             ex_vel_xyz_lst = []
 
