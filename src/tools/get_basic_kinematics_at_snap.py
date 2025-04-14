@@ -1,3 +1,4 @@
+import json
 import time
 
 import gc_utils  # type: ignore
@@ -8,19 +9,39 @@ import utilities as ut
 
 from tools.params import params
 
+# def get_snap_groups(it_lst: list[int], snapshot: int, proc_data):
+#     snap_id = gc_utils.snapshot_name(snapshot)
 
-def get_snap_groups(it_lst: list[int], snapshot: int, proc_data):
+#     snap_groups = set()
+
+#     for it in it_lst:
+#         it_id = gc_utils.iteration_name(it)
+
+#         snap_dat = proc_data[it_id]["snapshots"][snap_id]
+
+#         grp_lst = np.abs(snap_dat["group_id"][()])
+#         snap_groups.update(grp_lst)
+
+#     snap_groups = np.array(sorted(snap_groups))
+
+#     return snap_groups
+
+
+def get_gc_form_groups(it_lst: list[int], snapshot: int, proc_data):
     snap_id = gc_utils.snapshot_name(snapshot)
 
     snap_groups = set()
-
     for it in it_lst:
         it_id = gc_utils.iteration_name(it)
 
         snap_dat = proc_data[it_id]["snapshots"][snap_id]
+        group_ids = snap_dat["gc_id"][()]
 
-        grp_lst = np.abs(snap_dat["group_id"][()])
-        snap_groups.update(grp_lst)
+        # ignore in-situ GCs
+        group_mask = group_ids != 0
+
+        halo_zforms = snap_dat["halo_zform"][group_mask]
+        snap_groups.update(halo_zforms)
 
     snap_groups = np.array(sorted(snap_groups))
 
@@ -39,13 +60,13 @@ def get_acc_snap(halo_tid, main_halo_tid, halt):
     return snap_acc
 
 
-def get_group_dict(part, halt, proc_data, it_lst, snapshot, main_halo_tid):
-    snap_groups = get_snap_groups(it_lst, snapshot, proc_data)
+def get_group_dict(part, halt, proc_data, it_lst, snapshot, main_halo_tid, use_dm_center: bool = False):
+    snap_groups = get_gc_form_groups(it_lst, snapshot, proc_data)
 
     group_dict = {}
     for group in snap_groups:
-        if group == 0:
-            continue
+        # if group == 0:
+        #     continue
 
         halo_tid = gc_utils.get_halo_prog_at_snap(halt, group, snapshot)
         snap_acc = get_acc_snap(halo_tid, main_halo_tid, halt)
@@ -54,7 +75,10 @@ def get_group_dict(part, halt, proc_data, it_lst, snapshot, main_halo_tid):
         if snap_acc <= snapshot:
             continue
 
-        group_dict[group] = gc_utils.get_halo_details(part, halt, halo_tid, snapshot)
+        if use_dm_center:
+            group_dict[group] = gc_utils.get_dm_halo_details(part, halt, halo_tid, snapshot, False)
+        else:
+            group_dict[group] = gc_utils.get_halo_details(part, halt, halo_tid, snapshot)
 
     return group_dict
 
@@ -168,23 +192,24 @@ def get_correct_gc_part_idx(
 
             part_idxs = indices_at_snap
 
-    if choose_random:
-        # randomly choose one
-        part_idxs = np.random.choice(part_idxs, 1)
+            if len(part_idxs) > 1:
+                if choose_random:
+                    # randomly choose one
+                    part_idxs = np.random.choice(part_idxs, 1)
 
-    # else take youngest
-    else:
-        star_ages = part["star"].prop("age", part_idxs)
-        min_age = np.min(star_ages)
+                # else take youngest
+                else:
+                    star_ages = part["star"].prop("age", part_idxs)
+                    min_age = np.min(star_ages)
 
-        # Mask to find all indexes where age == min_age
-        min_age_mask = star_ages == min_age
-        part_idxs = part_idxs[min_age_mask]
+                    # Mask to find all indexes where age == min_age
+                    min_age_mask = star_ages == min_age
+                    part_idxs = part_idxs[min_age_mask]
 
-        # if still more than one then just select idx zero
-        if len(part_idxs) > 1:
-            # part_idxs = np.random.choice(part_idxs, 1)
-            part_idxs = part_idxs[0]
+                    # if still more than one then just select idx zero
+                    if len(part_idxs) > 1:
+                        # part_idxs = np.random.choice(part_idxs, 1)
+                        part_idxs = part_idxs[0]
 
     if len(part_idxs) == 0:
         raise RuntimeError(
@@ -263,7 +288,7 @@ def create_gc_part_idx_dict(part, halt, proc_data, it, snapshot, main_halo_tid, 
 
 
 #####################################################################################################################
-# Need to add a thing that uses pointers for previous snapshots to get the right index in the current snapshot
+# Main Function
 #####################################################################################################################
 
 
@@ -288,13 +313,26 @@ def get_basic_kinematics(
     # is the MW progenitor is the main host at this snapshot
     is_main_host = snapshot not in not_host_snap_lst
 
-    if not is_main_host:
+    # check if centering should be on dm halo
+    sim_codes = sim_dir + "simulation_codes.json"
+    with open(sim_codes) as sim_json:
+        sim_data = json.load(sim_json)
+
+    halt_center_snap_lst = sim_data[sim]["dm_center"]
+    use_dm_center = snapshot in halt_center_snap_lst
+
+    # if the halo is not the host at this snapshot or it has been flagged to use dm center at this snapshot
+    if (not is_main_host) or (use_dm_center):
         # get MW progenitor halo details at this snapshot
         halo_tid = gc_utils.get_main_prog_at_snap(halt, main_halo_tid, snapshot)
-        halo_detail_dict = gc_utils.get_halo_details(part, halt, halo_tid, snapshot)
+
+        if use_dm_center:
+            halo_detail_dict = gc_utils.get_dm_halo_details(part, halt, halo_tid, snapshot, True)
+        else:
+            halo_detail_dict = gc_utils.get_halo_details(part, halt, halo_tid, snapshot)
 
     if add_exsitu_halo_details:
-        group_dict = get_group_dict(part, halt, proc_data, it_lst, snapshot, main_halo_tid)
+        group_dict = get_group_dict(part, halt, proc_data, it_lst, snapshot, main_halo_tid, use_dm_center)
 
         # if there is nothing to add then don't add it
         if len(group_dict) == 0:
@@ -311,6 +349,7 @@ def get_basic_kinematics(
         )
 
         group_ids = proc_data[it_id]["snapshots"][snap_id]["group_id"][()]
+        halo_zform = proc_data[it_id]["snapshots"][snap_id]["halo_zform"][()]
 
         if len(gc_id_snap) is None:
             continue
@@ -347,18 +386,10 @@ def get_basic_kinematics(
         # parent_halo_tid_lst = []
         snap_part_idx_lst = []
 
-        for gc, ptype, group_id in zip(gc_id_snap, ptype_snap, group_ids):
+        for gc, ptype, group_id, halo_gc_form in zip(gc_id_snap, ptype_snap, group_ids, halo_zform):
             idx = id_idx_map[ptype][gc]
 
-            # is the MW progenitor is the main host at this snapshot
-            if is_main_host:
-                pos_xyz = part[ptype].prop("host.distance.principal", idx)
-                vel_xyz = part[ptype].prop("host.velocity.principal", idx)
-
-                pos_cyl = part[ptype].prop("host.distance.principal.cylindrical", idx)
-                vel_cyl = part[ptype].prop("host.velocity.principal.cylindrical", idx)
-
-            else:
+            if (not is_main_host) or (use_dm_center):
                 pos_xyz, vel_xyz = gc_utils.get_particle_halo_pos_vel(
                     part, gc, ptype, halo_detail_dict, coordinates="cartesian"
                 )
@@ -366,6 +397,14 @@ def get_basic_kinematics(
                 pos_cyl, vel_cyl = gc_utils.get_particle_halo_pos_vel(
                     part, gc, ptype, halo_detail_dict, coordinates="cylindrical"
                 )
+
+            # is the MW progenitor is the main host at this snapshot
+            else:
+                pos_xyz = part[ptype].prop("host.distance.principal", idx)
+                vel_xyz = part[ptype].prop("host.velocity.principal", idx)
+
+                pos_cyl = part[ptype].prop("host.distance.principal.cylindrical", idx)
+                vel_cyl = part[ptype].prop("host.velocity.principal.cylindrical", idx)
 
             ep_fir = part[ptype]["potential"][idx]
             ek = 0.5 * np.linalg.norm(vel_xyz) ** 2
@@ -414,7 +453,7 @@ def get_basic_kinematics(
             # if group_id == 0:
             #     group_halo = main_halo_tid
             # else:
-            #     group_halo = np.abs(group_id)
+            #     group_halo = halo_gc_form
             # parent_tid = gc_utils.get_halo_prog_at_snap(halt, group_halo, snapshot)
 
             # parent_halo_tid_lst.append(parent_tid)
@@ -455,11 +494,11 @@ def get_basic_kinematics(
 
             ex_r_lst = []
 
-            for gc, ptype, group_id in zip(gc_id_snap, ptype_snap, group_ids):
+            for gc, ptype, group_id, halo_gc_form in zip(gc_id_snap, ptype_snap, group_ids, halo_zform):
                 idx = id_idx_map[ptype][gc]
 
                 # need to add an aboslute as gc that die before accretion are noted by negative group ids
-                if np.abs(group_id) not in group_dict:
+                if halo_gc_form not in group_dict:
                     ex_pos_xyz = np.full(3, -1, dtype=int)
                     ex_vel_xyz = np.full(3, -1, dtype=int)
 
@@ -469,7 +508,7 @@ def get_basic_kinematics(
                     ex_r = -1
 
                 else:
-                    exsitu_halo_details = group_dict[np.abs(group_id)]
+                    exsitu_halo_details = group_dict[halo_gc_form]
 
                     ex_pos_xyz, ex_vel_xyz = gc_utils.get_particle_halo_pos_vel(
                         part, gc, ptype, exsitu_halo_details, coordinates="cartesian"

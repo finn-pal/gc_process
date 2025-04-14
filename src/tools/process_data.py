@@ -235,6 +235,7 @@ def process_data(
 
     # if gc was formed in a halo that is a main projenitor of the main halo at z = 0 then it was not accreted
     # 1 is accreted 0 is not accreted
+
     accr_flag_lst = [1 if mpb == 0 else 0 for mpb in int_data[it_id]["source"]["is_mpb"]]
 
     analyse_flag = []  # based on flags in function variables (0 = skip, 1 = analyse)

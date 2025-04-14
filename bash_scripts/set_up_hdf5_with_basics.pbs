@@ -1,0 +1,15 @@
+#!/bin/bash
+
+#PBS -N hdf5_with_mass_and_kinematics_m12i
+#PBS -l select=1:ncpus=16:mem=64gb
+#PBS -l walltime=8:00:00
+#PBS -M f.pal@unsw.edu.au
+#PBS -m bae
+#PBS -j oe
+#PBS -o ../reports/output_reports
+#PBS -e ../reports/error_reports
+
+cd $PBS_O_WORKDIR
+source ../my_env/bin/activate
+
+python3 ../src/run_hdf5_with_snapshots.py --simulation=m12i --iteration_low_limit=0 --iteration_up_limit=100 --location=katana --cores=16

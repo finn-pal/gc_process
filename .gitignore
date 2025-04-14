@@ -1,7 +1,6 @@
 .venv/
 .vscode/
 data/
-src/tools/interface
-src/tools/params
+data_old/
+notebooks/
 nuke/
-bash_scripts/

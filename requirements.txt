@@ -16,7 +16,7 @@ executing==2.0.1
 fonttools==4.54.1
 galpy==1.10.0
 # -e git+https://github.com/ybillchen/GC_formation_model.git@3f40db6851042c054a9231d9564a2c739fdccbc5#egg=GC_formation_model
-# -e git+https://github.com/finn-pal/gc_simulation_utilities.git@8ccd0dbf0339c59aa925746f493405dd07bf19d7#egg=gc_simulation_utilities
+# gc_simulation_utilities @ file:///Users/z5114326/Documents/GitHub/gc_simulation_utilities
 gizmo_analysis==1.0.2
 h5py==3.12.1
 halo_analysis==1.0.2

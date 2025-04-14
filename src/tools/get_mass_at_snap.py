@@ -26,12 +26,14 @@ def get_gc_masses_at_snap(
 
     raw_dir = sim_dir + sim + "/gc_results/raw/it_%d/" % it
 
-    gc_id_lst = proc_data[it_id]["source"]["gc_id"]
-    analyse_flag_lst = proc_data[it_id]["source"]["analyse_flag"]
-    group_id_lst = proc_data[it_id]["source"]["group_id"]
+    gc_id_lst = proc_data[it_id]["source"]["gc_id"][()]
+    analyse_flag_lst = proc_data[it_id]["source"]["analyse_flag"][()]
+    group_id_lst = proc_data[it_id]["source"]["group_id"][()]
 
-    snap_acc_lst = proc_data[it_id]["source"]["snap_acc"]
-    snap_form_lst = proc_data[it_id]["source"]["snap_zform"]
+    snap_acc_lst = proc_data[it_id]["source"]["snap_acc"][()]
+    snap_form_lst = proc_data[it_id]["source"]["snap_zform"][()]
+
+    halo_zform_lst = proc_data[it_id]["source"]["halo_zform"][()]
 
     snap_dict = {}
     for snapshot in snapshot_list:
@@ -61,6 +63,7 @@ def get_gc_masses_at_snap(
 
         snap_acc_snap = []
         group_id_snap = []
+        halo_zform_snap = []
         gc_test_set = []
         analyse_flag_snap = []
         now_accreted_flag = []
@@ -71,6 +74,7 @@ def get_gc_masses_at_snap(
             snap_accr = snap_acc_lst[idx]
             group_id = group_id_lst[idx]
             gc = gc_id_lst[idx]
+            halo_zform = halo_zform_lst[idx]
 
             ######## TEST ADD ALREADY ACCRETED FLAG ########
             ### UPDATE (11/03/2025)
@@ -106,6 +110,7 @@ def get_gc_masses_at_snap(
             gc_test_set.append(gc)
             now_accreted_flag.append(now_accreted)
             survived_accretion.append(survive_accreted)
+            halo_zform_snap.append(halo_zform)
 
         for gc in gc_id_snap:
             if gc not in gc_test_set:
@@ -123,6 +128,7 @@ def get_gc_masses_at_snap(
             "mass": mass_snap,
             "now_accreted": now_accreted_flag,
             "survived_accretion": survived_accretion,
+            "halo_zform": halo_zform_snap,
             # "analyse_flag": analyse_flag_snap,
         }
 

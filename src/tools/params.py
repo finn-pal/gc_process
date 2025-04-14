@@ -1,3 +1,4 @@
+# This is taken from Bill Chens GC Formation Model
 # Licensed under BSD-3-Clause License - see LICENSE
 
 # you need to specify all paths starting with $ to your local paths
