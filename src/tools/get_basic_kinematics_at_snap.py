@@ -293,6 +293,7 @@ def create_gc_part_idx_dict(part, halt, proc_data, it, snapshot, main_halo_tid, 
 
 
 def get_basic_kinematics(
+    halt,
     part,
     sim: str,
     it_lst: list[int],
@@ -305,7 +306,6 @@ def get_basic_kinematics(
     proc_file = sim_dir + sim + "/" + sim + "_processed.hdf5"
     proc_data = h5py.File(proc_file, "r")  # open processed data file
 
-    halt = gc_utils.get_halo_tree(sim, sim_dir, assign_hosts_rotation=False)
     not_host_snap_lst = gc_utils.get_different_snap_lst(main_halo_tid, halt, sim, sim_dir)
 
     snap_id = gc_utils.snapshot_name(snapshot)

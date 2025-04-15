@@ -11,6 +11,13 @@ import pandas as pd
 from tools.get_basic_kinematics_at_snap import get_basic_kinematics
 from tools.get_mass_at_snap import get_gc_masses_at_snap
 
+_global_halt = None
+
+
+def init_worker(halt_obj):
+    global _global_halt
+    _global_halt = halt_obj
+
 
 def create_hdf5(sim: str, it_lst: list[int], sim_dir: str):
     save_file = sim_dir + sim + "/" + sim + "_processed.hdf5"  # save location
@@ -86,10 +93,13 @@ def kin_main(
 ):
     fire_dir = sim_dir + sim + "/" + sim + "_res7100/"
 
+    global _global_halt
+    halt = _global_halt  # safely read it
+
     # only need dark and star as gc can't be gas particles
     part = gc_utils.open_snapshot(snapshot, fire_dir, species=["dark", "star"], assign_hosts_rotation=True)
     get_basic_kinematics(
-        part, sim, it_lst, snapshot, main_halo_tid, sim_dir, add_exsitu_halo_details, shared_dict
+        halt, part, sim, it_lst, snapshot, main_halo_tid, sim_dir, add_exsitu_halo_details, shared_dict
     )
     del part
 
@@ -232,6 +242,7 @@ if __name__ == "__main__":
             kin_snap_lst = pub_snaps
 
         add_exsitu_halo_details = args.exsitu
+        halt = gc_utils.get_halo_tree(sim, sim_dir, assign_hosts_rotation=False)
 
         with mp.Manager() as manager:
             shared_dict = manager.dict()  # Shared dictionary across processes
@@ -241,9 +252,14 @@ if __name__ == "__main__":
                 for snap in kin_snap_lst
             ]
 
-            with mp.Pool(processes=cores, maxtasksperchild=1) as pool:
+            # with mp.Pool(processes=cores, maxtasksperchild=1) as pool:
+            with mp.Pool(
+                processes=cores, maxtasksperchild=1, initializer=init_worker, initargs=(halt,)
+            ) as pool:
                 pool.starmap(kin_main, kin_args, chunksize=1)
 
             kin_result_dict = dict(shared_dict)
+
+        del halt
 
         add_kinematics_hdf5(sim, it_lst, kin_snap_lst, kin_result_dict, sim_dir)
