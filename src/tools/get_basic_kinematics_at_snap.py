@@ -228,6 +228,9 @@ def get_correct_gc_part_idx(
     if part["star"]["id"][part_idxs] != gc_id:
         raise RuntimeError("Error in determining correct GC particle index")
 
+    del part_form_pub
+    del part_form_snapform
+
     return part_idxs
 
 
