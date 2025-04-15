@@ -391,11 +391,11 @@ def get_basic_kinematics(
 
             if (not is_main_host) or (use_dm_center):
                 pos_xyz, vel_xyz = gc_utils.get_particle_halo_pos_vel(
-                    part, gc, ptype, halo_detail_dict, coordinates="cartesian"
+                    part, idx, ptype, halo_detail_dict, coordinates="cartesian"
                 )
 
                 pos_cyl, vel_cyl = gc_utils.get_particle_halo_pos_vel(
-                    part, gc, ptype, halo_detail_dict, coordinates="cylindrical"
+                    part, idx, ptype, halo_detail_dict, coordinates="cylindrical"
                 )
 
             # is the MW progenitor is the main host at this snapshot
@@ -511,11 +511,11 @@ def get_basic_kinematics(
                     exsitu_halo_details = group_dict[halo_gc_form]
 
                     ex_pos_xyz, ex_vel_xyz = gc_utils.get_particle_halo_pos_vel(
-                        part, gc, ptype, exsitu_halo_details, coordinates="cartesian"
+                        part, idx, ptype, exsitu_halo_details, coordinates="cartesian"
                     )
 
                     ex_pos_cyl, ex_vel_cyl = gc_utils.get_particle_halo_pos_vel(
-                        part, gc, ptype, exsitu_halo_details, coordinates="cylindrical"
+                        part, idx, ptype, exsitu_halo_details, coordinates="cylindrical"
                     )
 
                     ex_r = np.linalg.norm(ex_pos_xyz)
