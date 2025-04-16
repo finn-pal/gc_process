@@ -4,3 +4,5 @@ But it only used 0..9 core as I did not add a multipool processing parallelisati
 Look at comments on improving time in "get_mass_at_snap". The below link has a "Job queue limits summary" overview table. 
 
 https://docs.restech.unsw.edu.au/using_katana/running_jobs/
+
+hdf5_with_mass_and_kinematics_m12i for 100 iterations on katana at cores = 8, ram = 124GB takes 3:11:42 hr to run
