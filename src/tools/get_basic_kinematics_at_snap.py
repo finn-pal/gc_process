@@ -157,9 +157,19 @@ def get_correct_gc_part_idx(
                 "star", "index", gc_snapform_pub, fire_dir, assign_pointers=True
             )
 
-            part_snap = gizmo.io.Read.read_snapshots(
-                "star", "index", snapshot, fire_dir, assign_pointers=True
-            )
+            # there is no pointer for 600 as this is the default pointer direction
+            # so need to get part_snap
+            if snapshot != 600:
+                part_snap = gizmo.io.Read.read_snapshots(
+                    "star", "index", snapshot, fire_dir, assign_pointers=True
+                )
+
+                part_form_pub.Pointer.add_intermediate_pointers(part_snap.Pointer)
+                intermediate_snap = True
+
+            else:
+                intermediate_snap = False
+
             gc_utils.enable_print()
 
             # get part indices with matching gc_id
@@ -182,9 +192,11 @@ def get_correct_gc_part_idx(
             part_form_idxs = part_form_idxs[distance_mask]
 
             # now need to map part_form_idxs onto part_idxs
-            part_form_pub.Pointer.add_intermediate_pointers(part_snap.Pointer)
             pointers = part_form_pub.Pointer.get_pointers(
-                species_name_from="star", species_names_to="star", intermediate_snapshot=True, forward=True
+                species_name_from="star",
+                species_names_to="star",
+                intermediate_snapshot=intermediate_snap,
+                forward=True,
             )
 
             indices_at_form = part_form_idxs
