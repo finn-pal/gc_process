@@ -614,6 +614,8 @@ def make_images(
     fig_file = "snap_%d.png" % snapshot
     fig.savefig(save_path + fig_file)
 
+    plt.close(fig)
+
     # plt.show(block=False)
 
 
