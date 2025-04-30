@@ -20,12 +20,14 @@ def init_worker(halt_obj):
     _global_halt = halt_obj
 
 
-def constant_star_snap(halt, main_halo_tid: int, sim_dir: str = None, get_public_snap: bool = False):
+def constant_star_snap(halt, main_halo_tid: int, sim_dir: str = None, get_public_snap: bool = True):
     idx = np.where(halt["tid"] == main_halo_tid)[0][0]
 
     while halt["star.radius.90"][idx] > 0:
         star_snap = halt["snapshot"][idx]
         idx = halt["progenitor.main.index"][idx]
+
+        snap_lst = np.arange(star_snap, 601)
 
     if get_public_snap:
         if sim_dir is None:
@@ -43,9 +45,9 @@ def constant_star_snap(halt, main_halo_tid: int, sim_dir: str = None, get_public
         ]
         snap_lst = snap_pub_data["index"]
 
-        star_snap = np.min(snap_lst[snap_lst >= star_snap])
+        snap_lst = np.array(snap_lst[snap_lst >= star_snap])
 
-    return star_snap
+    return snap_lst
 
 
 def get_halo_center(part, halt, main_halo_tid, sim, sim_dir, snapshot):
@@ -701,16 +703,9 @@ if __name__ == "__main__":
     else:
         raise RuntimeError("Incorrect location provided. Must be local or katana.")
 
-    potential_snaps = sim_dir + sim + "/potentials.json"
-    with open(potential_snaps) as json_file:
-        pot_data = json.load(json_file)
-
-    snap_lst = args.snapshots
-    if snap_lst is None:
-        snap_lst = np.array(pot_data[sim], dtype=int)
-
-    else:
-        snap_lst = np.array(snap_lst)
+    # potential_snaps = sim_dir + sim + "/potentials.json"
+    # with open(potential_snaps) as json_file:
+    #     pot_data = json.load(json_file)
 
     cores = args.cores
     if cores is None:
@@ -737,8 +732,9 @@ if __name__ == "__main__":
         sim_data = json.load(sim_json)
     main_halo_tid = [sim_data[sim]["halo"]]
 
-    star_snap = constant_star_snap(halt, main_halo_tid, sim_dir)
-    snap_lst = snap_lst[snap_lst >= star_snap]
+    snap_lst = args.snapshots
+    if snap_lst is None:
+        snap_lst = constant_star_snap(halt, main_halo_tid, sim_dir)
 
     print(snap_lst)
 
