@@ -379,6 +379,9 @@ def get_basic_kinematics(
         pos_cyl_lst = []
         vel_cyl_lst = []
 
+        pos_sph_lst = []
+        vel_sph_lst = []
+
         # r_cyl_lst = []
         # phi_cyl_lst = []
         # vr_cyl_lst = []
@@ -410,6 +413,10 @@ def get_basic_kinematics(
                     part, idx, ptype, halo_detail_dict, coordinates="cylindrical"
                 )
 
+                pos_sph, vel_sph = gc_utils.get_particle_halo_pos_vel(
+                    part, idx, ptype, halo_detail_dict, coordinates="spherical"
+                )
+
             # is the MW progenitor is the main host at this snapshot
             else:
                 pos_xyz = part[ptype].prop("host.distance.principal", idx)
@@ -417,6 +424,9 @@ def get_basic_kinematics(
 
                 pos_cyl = part[ptype].prop("host.distance.principal.cylindrical", idx)
                 vel_cyl = part[ptype].prop("host.velocity.principal.cylindrical", idx)
+
+                pos_sph = part[ptype].prop("host.distance.principal.spherical", idx)
+                vel_sph = part[ptype].prop("host.velocity.principal.spherical", idx)
 
             ep_fir = part[ptype]["potential"][idx]
             ek = 0.5 * np.linalg.norm(vel_xyz) ** 2
@@ -445,6 +455,9 @@ def get_basic_kinematics(
 
             pos_cyl_lst.append(pos_cyl)
             vel_cyl_lst.append(vel_cyl)
+
+            pos_sph_lst.append(pos_sph)
+            vel_sph_lst.append(vel_sph)
 
             # r_cyl_lst.append(r_cyl)
             # phi_cyl_lst.append(phi_cyl)
@@ -488,6 +501,8 @@ def get_basic_kinematics(
             "vel.xyz": np.array(vel_xyz_lst),
             "pos.cyl": np.array(pos_cyl_lst),
             "vel.cyl": np.array(vel_cyl_lst),
+            "pos.sph": np.array(pos_sph_lst),
+            "vel.sph": np.array(vel_sph_lst),
             "r": np.array(r_lst),
             "ep_fire": np.array(ep_fire_lst),
             "ek": np.array(ek_lst),
