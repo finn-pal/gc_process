@@ -1,8 +1,8 @@
 import sys
 
+import gc_utils  # type: ignore
 import h5py
 import pandas as pd
-from gc_utils import iteration_name, particle_type, snapshot_name  # type: ignore
 
 # lets try this with multiprocessing, combine into a single dictionary and then write another function that
 # chucks the dictionary into hdf, this might be a really simple thing to do that will increase processing time
@@ -20,7 +20,7 @@ def get_gc_masses_at_snap(
     proc_file = sim_dir + sim + "/" + sim + "_processed.hdf5"
     proc_data = h5py.File(proc_file, "r")  # open processed data file
 
-    it_id = iteration_name(it)
+    it_id = gc_utils.iteration_name(it)
 
     # data_dict[it_id] = {}
 
@@ -37,7 +37,7 @@ def get_gc_masses_at_snap(
 
     snap_dict = {}
     for snapshot in snapshot_list:
-        snap_id = snapshot_name(snapshot)
+        snap_id = gc_utils.snapshot_name(snapshot)
 
         snap_mass_file = raw_dir + "allcat_s-%d_p2-7_p3-1_k-1.5_logm_snap%d.txt" % (it, snapshot - offset)
         gc_id_file = raw_dir + "allcat_s-%d_p2-7_p3-1_gcid.txt" % it
@@ -58,7 +58,7 @@ def get_gc_masses_at_snap(
 
         gc_id_snap = [gc_id for gc_id in filt_comb_df["GC_ID"]]
         mass_snap = [mass for mass in filt_comb_df["mass"]]
-        ptype_snap = [particle_type(quality) for quality in filt_comb_df["quality"]]
+        ptype_snap = [gc_utils.particle_type(quality) for quality in filt_comb_df["quality"]]
         idx_lst = filt_comb_df.index
 
         snap_acc_snap = []
