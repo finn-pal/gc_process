@@ -2,6 +2,7 @@ import sys
 
 import gc_utils  # type: ignore
 import h5py
+import numpy as np
 import pandas as pd
 
 # lets try this with multiprocessing, combine into a single dictionary and then write another function that
@@ -35,8 +36,17 @@ def get_gc_masses_at_snap(
 
     halo_zform_lst = proc_data[it_id]["source"]["halo_zform"][()]
 
+    # get eigenvalue details
+    eig1_file = raw_dir + "allcat_s-%d_p2-7_p3-1_tideig1.txt" % it
+    eig2_file = raw_dir + "allcat_s-%d_p2-7_p3-1_tideig2.txt" % it
+    eig3_file = raw_dir + "allcat_s-%d_p2-7_p3-1_tideig3.txt" % it
+
+    eig1 = np.loadtxt(eig1_file)
+    eig2 = np.loadtxt(eig2_file)
+    eig3 = np.loadtxt(eig3_file)
+
     snap_dict = {}
-    for snapshot in snapshot_list:
+    for j, snapshot in enumerate(snapshot_list):
         snap_id = gc_utils.snapshot_name(snapshot)
 
         snap_mass_file = raw_dir + "allcat_s-%d_p2-7_p3-1_k-1.5_logm_snap%d.txt" % (it, snapshot - offset)
@@ -68,6 +78,10 @@ def get_gc_masses_at_snap(
         analyse_flag_snap = []
         now_accreted_flag = []
         survived_accretion = []
+
+        eig1_snap = []
+        eig2_snap = []
+        eig3_snap = []
 
         for idx in idx_lst:
             analyse_flag = analyse_flag_lst[idx]
@@ -112,6 +126,11 @@ def get_gc_masses_at_snap(
             survived_accretion.append(survive_accreted)
             halo_zform_snap.append(halo_zform)
 
+            # append eigenvalues
+            eig1_snap.append(eig1[idx, j])
+            eig2_snap.append(eig2[idx, j])
+            eig3_snap.append(eig3[idx, j])
+
         for gc in gc_id_snap:
             if gc not in gc_test_set:
                 sys.exit("GC Number mismatch")
@@ -129,6 +148,9 @@ def get_gc_masses_at_snap(
             "now_accreted": now_accreted_flag,
             "survived_accretion": survived_accretion,
             "halo_zform": halo_zform_snap,
+            "tideig_1": eig1_snap,
+            "tideig_2": eig2_snap,
+            "tideig_3": eig3_snap,
             # "analyse_flag": analyse_flag_snap,
         }
 
