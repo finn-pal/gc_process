@@ -110,8 +110,11 @@ if __name__ == "__main__":
     elif location == "katana":
         sim_dir = "/srv/scratch/astro/z5114326/simulations/"
 
+    elif location == "one_touch":
+        sim_dir = "/Volumes/One Touch/simulations/"
+
     else:
-        raise RuntimeError("Incorrect location provided. Must be local or katana.")
+        raise RuntimeError("Incorrect location provided. Must be local, katana or one_touch.")
 
     file_path = sim_dir + "simulation_codes.json"
     if not os.path.exists(file_path):

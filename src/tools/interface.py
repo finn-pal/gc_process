@@ -72,6 +72,14 @@ def yt_load_all(path):
     return d
 
 
+def yt_load_all_v2(path):
+    d = []
+    for snap in full_snap:
+        file_path = os.path.join(path, f"snapdir_{snap:03d}", f"snapshot_{snap:03d}.0.hdf5")
+        d.append(yt.load(file_path))
+    return d
+
+
 def get_fp(tree):
     subid = tree[:, 1].astype(int)
     descid = tree[:, 3].astype(int)
@@ -88,6 +96,7 @@ def get_fp(tree):
 
 
 def handle_merger_tree(tree_base, save_base, hid, skip=48):
+    print("Have begun merger tree")
     fields = [
         "SubhaloMass",
         "FirstProgenitorID",
@@ -109,6 +118,7 @@ def handle_merger_tree(tree_base, save_base, hid, skip=48):
     tree_full = np.loadtxt(tree_path, skiprows=skip)
     tree = tree_full[tree_full[:, 29] == hid]
 
+    print("making merger tree file")
     filename = save_base + "merger_tree_%d.hdf5" % hid
     if os.path.exists(filename):
         os.remove(filename)
@@ -139,6 +149,7 @@ def handle_merger_tree(tree_base, save_base, hid, skip=48):
 
 
 def handle_halo(sim_base, save_base, hid, skip=48, mh_min=1e8, offset=4):
+    print("Have begun part handle")
     full_snap_rockstar = full_snap - offset
 
     parttypes = ["dm", "stars", "gas"]
@@ -182,13 +193,15 @@ def handle_halo(sim_base, save_base, hid, skip=48, mh_min=1e8, offset=4):
         ["kpccm/h", "km/s", None, None, "Msun"],
     ]
 
-    dataset = yt_load_all(sim_base)
+    # dataset = yt_load_all(sim_base)
+    dataset = yt_load_all_v2(sim_base)
 
     tree_path = tree_base
     tree_full = np.loadtxt(tree_path, skiprows=skip)
     tree = tree_full[tree_full[:, 29] == hid]
     ntot = len(tree)
 
+    print("making part file")
     filename = save_base + "halo_%d.hdf5" % hid
     if not os.path.exists(filename):
         with h5py.File(filename, "w") as f:
@@ -257,15 +270,14 @@ if __name__ == "__main__":
     Np = 2
 
     # base path for FIRE m12i # 596
-    skip = 50
-    offset = 4
-    tree_base = "/Volumes/My Passport for Mac/m12i_res7100/halo/rockstar_dm/catalog/trees/tree_0_0_0.dat"
-    sim_base = "/Volumes/My Passport for Mac/m12i_res7100/output/"
+    # skip = 50
+    # offset = 4
+    # tree_base = "/Volumes/My Passport for Mac/m12i_res7100/halo/rockstar_dm/catalog/trees/tree_0_0_0.dat"
+    # sim_base = "/Volumes/My Passport for Mac/m12i_res7100/output/"
     # save_base = "/Users/z5114326/Documents/GitHub/GC_kinematics/data/interface_output/"
-    save_tree = "/Users/z5114326/Documents/GitHub/GC_kinematics/data/base_tree/"
-    save_halo = "/Users/z5114326/Documents/GitHub/GC_kinematics/data/base_halo/"
-
-    hid = 25236877
+    # save_tree = "/Users/z5114326/Documents/GitHub/GC_kinematics/data/base_tree/"
+    # save_halo = "/Users/z5114326/Documents/GitHub/GC_kinematics/data/base_halo/"
+    # hid = 25236877
 
     # # base path for FIRE m12c # 599
     # skip = 50
@@ -287,17 +299,27 @@ if __name__ == "__main__":
     # skip = 50
     # offset = 1
     # tree_base = '/nfs/astro2/ybchen/FIRE/m12m_res7100/halo/rockstar_dm/catalog/trees/tree_0_0_0.dat'
+    # tree_base = (
+    #     "/Volumes/One Touch/simulations/m12m/m12m_res7100/halo/rockstar_dm/catalog/trees/tree_0_0_0.dat"
+    # )
+    # sim_base = "/Volumes/One Touch/simulations/m12m/m12m_res7100/output/"
     # sim_base = '/nfs/astro2/ybchen/FIRE/m12m_res7100/output/'
     # save_base = '/nfs/astro2/ybchen/fire_halos/'
-    # hid = 79524730
+    # save_base = "/Volumes/One Touch/simulations/m12m/interface_output/"
+    # hid = 79502363
 
     # # base path for FIRE m12f
-    # skip = 50
-    # offset = 1
+    skip = 50
+    offset = 1
     # tree_base = '/nfs/astro2/ybchen/FIRE/m12f_res7100/halo/rockstar_dm/catalog/trees/tree_0_0_0.dat'
+    tree_base = (
+        "/Volumes/One Touch/simulations/m12f/m12f_res7100/halo/rockstar_dm/catalog/trees/tree_0_0_0.dat"
+    )
     # sim_base = '/nfs/astro2/ybchen/FIRE/m12f_res7100/output/'
+    sim_base = "/Volumes/One Touch/simulations/m12f/m12f_res7100/output/"
     # save_base = '/nfs/astro2/ybchen/fire_halos/'
-    # hid = 53854632
+    save_base = "/Volumes/One Touch/simulations/m12f/interface_output/"
+    hid = 53854632
 
     # # base path for FIRE m12b # 599
     # skip = 50
@@ -346,5 +368,6 @@ if __name__ == "__main__":
     # with Pool(Np) as p:
     #     p.starmap(handle_halo, para_list)
 
-    handle_merger_tree(tree_base, save_tree, hid, skip)
-    handle_halo(sim_base, save_halo, hid, skip, offset=offset)
+    #### USE CORRECT yt_load_all_v2
+    # handle_merger_tree(tree_base, save_base, hid, skip)
+    handle_halo(sim_base, save_base, hid, skip, offset=offset)
