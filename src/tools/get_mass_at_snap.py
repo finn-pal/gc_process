@@ -82,6 +82,7 @@ def get_gc_masses_at_snap(
         eig1_snap = []
         eig2_snap = []
         eig3_snap = []
+        eigm_snap = []
 
         for idx in idx_lst:
             analyse_flag = analyse_flag_lst[idx]
@@ -131,6 +132,9 @@ def get_gc_masses_at_snap(
             eig2_snap.append(eig2[idx, j])
             eig3_snap.append(eig3[idx, j])
 
+            max_eig = np.max(np.abs((eig1[idx, j], eig2[idx, j], eig3[idx, j])))
+            eigm_snap.append(max_eig)
+
         for gc in gc_id_snap:
             if gc not in gc_test_set:
                 sys.exit("GC Number mismatch")
@@ -151,6 +155,7 @@ def get_gc_masses_at_snap(
             "tideig_1": eig1_snap,
             "tideig_2": eig2_snap,
             "tideig_3": eig3_snap,
+            "tideig_m": eigm_snap,
             # "analyse_flag": analyse_flag_snap,
         }
 
