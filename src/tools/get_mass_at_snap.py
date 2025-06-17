@@ -36,6 +36,8 @@ def get_gc_masses_at_snap(
 
     halo_zform_lst = proc_data[it_id]["source"]["halo_zform"][()]
 
+    t_dis_lst = proc_data[it_id]["source"]["t_dis"][()]
+
     # get eigenvalue details
     eig1_file = raw_dir + "allcat_s-%d_p2-7_p3-1_tideig1.txt" % it
     eig2_file = raw_dir + "allcat_s-%d_p2-7_p3-1_tideig2.txt" % it
@@ -84,12 +86,23 @@ def get_gc_masses_at_snap(
         eig3_snap = []
         eigm_snap = []
 
+        surv_flag = []
+
         for idx in idx_lst:
             analyse_flag = analyse_flag_lst[idx]
             snap_accr = snap_acc_lst[idx]
             group_id = group_id_lst[idx]
             gc = gc_id_lst[idx]
             halo_zform = halo_zform_lst[idx]
+
+            # UPDATE 18/06/2025 ######################
+            # add survival flag to each gc in snapshot
+            t_dis = t_dis_lst[idx]
+            if t_dis == -1:
+                surv_flag.append(1)
+            else:
+                surv_flag.append(0)
+            ##########################################
 
             ######## TEST ADD ALREADY ACCRETED FLAG ########
             ### UPDATE (11/03/2025)
@@ -156,6 +169,7 @@ def get_gc_masses_at_snap(
             "tideig_2": eig2_snap,
             "tideig_3": eig3_snap,
             "tideig_m": eigm_snap,
+            "survive_flag": surv_flag,
             # "analyse_flag": analyse_flag_snap,
         }
 
