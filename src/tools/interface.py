@@ -280,12 +280,17 @@ if __name__ == "__main__":
     # hid = 25236877
 
     # # base path for FIRE m12c # 599
-    # skip = 50
-    # offset = 1
-    # tree_base = '/nfs/astro2/ybchen/FIRE/m12c_res7100/halo/rockstar_dm/catalog/trees/tree_0_0_0.dat'
-    # sim_base = '/nfs/astro2/ybchen/FIRE/m12c_res7100/output/'
-    # save_base = '/nfs/astro2/ybchen/fire_halos/'
-    # hid = 89395412
+    skip = 50
+    offset = 1
+    # tree_base = "/nfs/astro2/ybchen/FIRE/m12c_res7100/halo/rockstar_dm/catalog/trees/tree_0_0_0.dat"
+    tree_base = (
+        "/Volumes/One Touch/simulations/m12c/m12c_res7100/halo/rockstar_dm/catalog/trees/tree_0_0_0.dat"
+    )
+    # sim_base = "/nfs/astro2/ybchen/FIRE/m12c_res7100/output/"
+    sim_base = "/Volumes/One Touch/simulations/m12c/m12c_res7100/output/"
+    # save_base = "/nfs/astro2/ybchen/fire_halos/"
+    save_base = "/Volumes/One Touch/simulations/m12c/interface_output/"
+    hid = 89423951
 
     # # base path for FIRE m12r # 599
     # skip = 50
@@ -309,24 +314,29 @@ if __name__ == "__main__":
     # hid = 79502363
 
     # # base path for FIRE m12f
-    skip = 50
-    offset = 1
+    # skip = 50
+    # offset = 1
     # tree_base = '/nfs/astro2/ybchen/FIRE/m12f_res7100/halo/rockstar_dm/catalog/trees/tree_0_0_0.dat'
-    tree_base = (
-        "/Volumes/One Touch/simulations/m12f/m12f_res7100/halo/rockstar_dm/catalog/trees/tree_0_0_0.dat"
-    )
+    # tree_base = (
+    #     "/Volumes/One Touch/simulations/m12f/m12f_res7100/halo/rockstar_dm/catalog/trees/tree_0_0_0.dat"
+    # )
     # sim_base = '/nfs/astro2/ybchen/FIRE/m12f_res7100/output/'
-    sim_base = "/Volumes/One Touch/simulations/m12f/m12f_res7100/output/"
+    # sim_base = "/Volumes/One Touch/simulations/m12f/m12f_res7100/output/"
     # save_base = '/nfs/astro2/ybchen/fire_halos/'
-    save_base = "/Volumes/One Touch/simulations/m12f/interface_output/"
-    hid = 53854632
+    # save_base = "/Volumes/One Touch/simulations/m12f/interface_output/"
+    # hid = 53854632
 
     # # base path for FIRE m12b # 599
     # skip = 50
     # offset = 1
     # tree_base = '/nfs/astro2/ybchen/FIRE/m12b_res7100/halo/rockstar_dm/catalog/trees/tree_0_0_0.dat'
-    # sim_base = '/nfs/astro2/ybchen/FIRE/m12b_res7100/output/'
-    # save_base = '/nfs/astro2/ybchen/fire_halos/'
+    # tree_base = (
+    #     "/Volumes/One Touch/simulations/m12b/m12b_res7100/halo/rockstar_dm/catalog/trees/tree_0_0_0.dat"
+    # )
+    # # sim_base = '/nfs/astro2/ybchen/FIRE/m12b_res7100/output/'
+    # sim_base = "/Volumes/One Touch/simulations/m12b/m12b_res7100/output/"
+    # # save_base = '/nfs/astro2/ybchen/fire_halos/'
+    # save_base = "/Volumes/One Touch/simulations/m12b/interface_output/"
     # hid = 39810368
 
     # # base path for FIRE m12w # 599
@@ -369,5 +379,5 @@ if __name__ == "__main__":
     #     p.starmap(handle_halo, para_list)
 
     #### USE CORRECT yt_load_all_v2
-    # handle_merger_tree(tree_base, save_base, hid, skip)
+    handle_merger_tree(tree_base, save_base, hid, skip)
     handle_halo(sim_base, save_base, hid, skip, offset=offset)
