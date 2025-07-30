@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #PBS -N hdf5_with_mass_and_kinematics_m12c
-#PBS -l select=1:ncpus=8:mem=124gb
+#PBS -l select=1:ncpus=6:mem=124gb
 #PBS -l walltime=12:00:00
 #PBS -M f.pal@unsw.edu.au
 #PBS -m bae
