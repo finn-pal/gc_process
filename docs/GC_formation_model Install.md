@@ -1,3 +1,5 @@
+# HEADER
+
 Package install instruction for GC_formation_model by Yintiang (Bill) Chen & Oleg Gnedin 
 https://github.com/ybillchen/GC_formation_model
 
