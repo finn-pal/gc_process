@@ -323,7 +323,7 @@ def get_basic_kinematics(
     not_host_snap_lst = gc_utils.get_different_snap_lst(main_halo_tid, halt, sim, sim_dir)
 
     snap_id = gc_utils.snapshot_name(snapshot)
-    print(snap_id, "-", "Getting Host Details")
+    # print(snap_id, "-", "Getting Host Details")
 
     # is the MW progenitor is the main host at this snapshot
     is_main_host = snapshot not in not_host_snap_lst
@@ -337,7 +337,7 @@ def get_basic_kinematics(
     use_dm_center = snapshot in halt_center_snap_lst
 
     # if the halo is not the host at this snapshot or it has been flagged to use dm center at this snapshot
-    start = time.time()
+    # start = time.time()
     if (not is_main_host) or (use_dm_center):
         # get MW progenitor halo details at this snapshot
         halo_tid = gc_utils.get_main_prog_at_snap(halt, main_halo_tid, snapshot)
@@ -347,10 +347,10 @@ def get_basic_kinematics(
         else:
             halo_detail_dict = gc_utils.get_halo_details(part, halt, halo_tid, snapshot)
 
-    end = time.time()
-    print("Halo Detail", "time:", end - start)
+    # end = time.time()
+    # print("Halo Detail", "time:", end - start)
 
-    start = time.time()
+    # start = time.time()
     if add_exsitu_halo_details:
         group_dict = get_group_dict(part, halt, proc_data, it_lst, snapshot, main_halo_tid, use_dm_center)
 
@@ -358,8 +358,8 @@ def get_basic_kinematics(
         if len(group_dict) == 0:
             add_exsitu_halo_details = False
 
-    end = time.time()
-    print("Group Dict", "time:", end - start)
+    # end = time.time()
+    # print("Group Dict", "time:", end - start)
 
     it_dict = {}
     start = time.time()
