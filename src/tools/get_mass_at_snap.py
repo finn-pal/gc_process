@@ -168,7 +168,7 @@ def get_gc_masses_at_snap(
             "tideig_1": eig1_snap,
             "tideig_2": eig2_snap,
             "tideig_3": eig3_snap,
-            "tideig_m": eigm_snap,
+            # "tideig_m": eigm_snap,
             "survive_flag": surv_flag,
             # "analyse_flag": analyse_flag_snap,
         }
