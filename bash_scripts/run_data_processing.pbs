@@ -9,7 +9,7 @@
 #PBS -o ../reports/output_reports
 #PBS -e ../reports/error_reports
 
-#PBS -J 0-100
+#PBS -J 101-220
 ## ${PBS_ARRAY_INDEX}
 
 cd $PBS_O_WORKDIR
