@@ -104,18 +104,14 @@ def kin_main(
     del part
 
 
-def add_kinematics_hdf5(sim, it_lst: list[int], snap_lst: list[int], result_dict: dict, sim_dir: str):
-    proc_file = sim_dir + sim + "/" + sim + "_processed.hdf5"
+def add_kinematics_hdf5(simulation, it_lst: list[int], snap_lst: list[int], result_dict: dict, sim_dir: str):
+    proc_file = sim_dir + simulation + "/" + simulation + "_processed.hdf5"
     proc_data = h5py.File(proc_file, "a")  # open processed data file
 
     # add a correction that if an it_id key exists that is not in it_lst then delete it
-    it_csv = sim_dir + "iteration_check.csv"
-    it_df = pd.read_csv(it_csv)
-    it_msk = it_df[sim] != 0
-    it_skip_arr = it_df["it_id"][it_msk].values
-
     for it_id in proc_data.keys():
-        if it_id in it_skip_arr:
+        it = int(it_id[2:])
+        if it not in it_lst:
             del proc_data[it_id]
 
     for it in it_lst:
@@ -162,7 +158,7 @@ if __name__ == "__main__":
     parser.add_argument("-l", "--location", required=True, type=str, help="either local or katana")
     parser.add_argument("-c", "--cores", required=False, type=int, help="number of cores to run process on")
     parser.add_argument(
-        "-e", "--exsitu", required=False, default=False, type=str2bool, help="add the exsitu gc halo details"
+        "-e", "--exsitu", required=False, default=True, type=str2bool, help="add the exsitu gc halo details"
     )
     parser.add_argument(
         "-r",
@@ -243,14 +239,17 @@ if __name__ == "__main__":
 
         snap_offset = sim_data[sim]["offset"]
 
-        with mp.Manager() as manager:
-            shared_dict = manager.dict()  # Shared dictionary across processes
-            mass_args = [(sim, snap_offset, it, snap_lst, sim_dir, shared_dict) for it in it_lst]
+        # Prepare arguments for mass calculation
+        mass_args = [(sim, snap_offset, it, snap_lst, sim_dir) for it in it_lst]
 
-            with mp.Pool(processes=cores, maxtasksperchild=1) as pool:
-                pool.starmap(get_gc_masses_at_snap, mass_args, chunksize=1)
+        with mp.Pool(processes=cores, maxtasksperchild=1) as pool:
+            # Each worker now returns a dict instead of writing to shared_dict
+            mass_results_list = pool.starmap(get_gc_masses_at_snap, mass_args, chunksize=1)
 
-            final_dict = dict(shared_dict)
+        # Merge all returned dicts into a single dict
+        final_dict = {}
+        for d in mass_results_list:
+            final_dict.update(d)
 
         add_mass_hdf5(sim, it_lst, final_dict, sim_dir)
 
@@ -264,21 +263,23 @@ if __name__ == "__main__":
         add_exsitu_halo_details = args.exsitu
         halt = gc_utils.get_halo_tree(sim, sim_dir, assign_hosts_rotation=False)
 
-        with mp.Manager() as manager:
-            shared_dict = manager.dict()  # Shared dictionary across processes
-            # args = [(sim, it_lst, snap_group, sim_dir, data_dir, shared_dict) for snap_group in snap_groups]
-            kin_args = [
-                (sim, it_lst, snap, main_halo_tid, sim_dir, add_exsitu_halo_details, shared_dict)
-                for snap in kin_snap_lst
-            ]
+        kin_args = [
+            (sim, it_lst, snap, main_halo_tid, sim_dir, add_exsitu_halo_details) for snap in kin_snap_lst
+        ]
 
-            # with mp.Pool(processes=cores, maxtasksperchild=1) as pool:
-            with mp.Pool(
-                processes=cores, maxtasksperchild=1, initializer=init_worker, initargs=(halt,)
-            ) as pool:
-                pool.starmap(kin_main, kin_args, chunksize=1)
+        with mp.Pool(processes=cores, maxtasksperchild=1, initializer=init_worker, initargs=(halt,)) as pool:
+            # Each worker returns a dict instead of writing to shared_dict
+            kin_results_list = pool.starmap(kin_main, kin_args, chunksize=1)
 
-            kin_result_dict = dict(shared_dict)
+        # kin_results_list = []
+        # for snap in snap_lst:
+        #     results = kin_main(sim, it_lst, snap, main_halo_tid, sim_dir, add_exsitu_halo_details)
+        #     kin_results_list.append(results)
+
+        # Merge all returned dicts into a single dict
+        kin_result_dict = {}
+        for res in kin_results_list:
+            kin_result_dict.update(res)
 
         del halt
 
